@@ -1,3 +1,5 @@
+import { useEffect, useLayoutEffect } from 'react';
+import { useRouter } from 'expo-router';
 import { Image, StyleSheet, Platform } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
@@ -6,6 +8,15 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
 export default function HomeScreen() {
+  const router = useRouter();
+
+  // Ensure the navigation only happens after the component is mounted
+  useEffect(() => {
+    // Using setTimeout to ensure layout is fully rendered
+    setTimeout(() => {
+      router.push('/login');
+    }, 0);
+  }, []);
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
