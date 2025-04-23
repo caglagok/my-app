@@ -6,7 +6,7 @@ export default function App() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    axios.get('http://<IP_ADRESİN>:5000')
+    axios.get('http://localhost:3001')
       .then(response => setMessage(response.data))
       .catch(error => {
         console.log("Bağlantı hatası", error);

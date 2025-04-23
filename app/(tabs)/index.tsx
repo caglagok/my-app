@@ -14,7 +14,7 @@ export default function HomeScreen() {
   useEffect(() => {
     // Using setTimeout to ensure layout is fully rendered
     setTimeout(() => {
-      router.push('/login');
+      router.push('/Game');
     }, 0);
   }, []);
   return (
