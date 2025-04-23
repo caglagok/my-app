@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import kelimeData from '../assets/kelimeler.json';
+import { useLocalSearchParams } from 'expo-router';
 
 import {
   View,
@@ -60,8 +61,12 @@ const bonusTiles = {
 
 const kelimeListesi: string[] = require('../assets/kelimeler.json');
 
-const screenWidth = Dimensions.get("window").width;
-const cellSize = screenWidth / 15;
+
+const screenWidth = Dimensions.get('window').width;
+const cellSize = Math.floor(screenWidth / 15); // 15x15 board
+const tileWidth = Math.floor(screenWidth / 8); // Harf kartlarının genişliği
+const tileHeight = tileWidth * 1.25; // Harf kartlarının yüksekliği
+const fontScale = screenWidth / 400; // Ekran boyutuna göre ölçekleme
 
 const generateRandomLetters = (count: number): LetterTile[] => {
   const allLetters: LetterTile[] = [];
@@ -86,8 +91,11 @@ export default function Game() {
   const [placedLetters, setPlacedLetters] = useState<PlacedTile[]>([]);
   const [showConfirm, setShowConfirm] = useState(false);
   const [score, setScore] = useState<number>(0);
+  const { duration } = useLocalSearchParams();
+  const gameDuration = Number(duration);
 
   useEffect(() => {
+    console.log("Oyun süresi (dakika):", gameDuration);
     setPlayerHand(generateRandomLetters(7));
   }, []);
 
@@ -124,10 +132,12 @@ export default function Game() {
     }
   };
 
+  // Harf kartına basıldığında seçme işlemi
   const handleLetterPress = (index: number) => {
     setSelectedLetterIndex(index);
   };
 
+  // Kelimenin geçerliliğini kontrol etme
   const kelimeGecerliMi = (kelime: string): boolean => {
     if (!Array.isArray(kelimeListesi)) {
       console.error('Kelime listesi uygun formatta değil.');
@@ -136,7 +146,7 @@ export default function Game() {
     return kelimeListesi.includes(kelime.toLowerCase());
   };
   
-
+  // Kelime puanı hesaplama
   const kelimePuaniHesapla = (): number => {
     let kelime = '';
     let toplamPuan = 0;
@@ -159,7 +169,8 @@ export default function Game() {
 
     return toplamPuan * kelimeKatsayi;
   };
-
+  
+  // Kelime onaylama işlemi
   const onaylaKelime = () => {
     const kelime = placedLetters.map(k => k.letter).join('');
     if (kelimeGecerliMi(kelime)) {
@@ -259,7 +270,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  cellText: { fontSize: 10, fontWeight: '600' },
+  cellText: {
+    fontSize: 10 * fontScale,
+    fontWeight: '600',
+  },
   h2: { backgroundColor: '#add8e6' },
   k2: { backgroundColor: '#ffc0cb' },
   h3: { backgroundColor: '#87ceeb' },
@@ -269,10 +283,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', padding: 10,
   },
   tile: {
-    width: 40, height: 50, backgroundColor: '#fcd34d', margin: 4, borderRadius: 4, justifyContent: 'center', alignItems: 'center',
+    width: tileWidth,
+    height: tileHeight,
+    backgroundColor: '#fcd34d',
+    margin: 4,
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  tileText: { fontSize: 18, fontWeight: 'bold' },
-  tilePoint: { fontSize: 12, color: '#333' },
+  tileText: {
+    fontSize: 18 * fontScale,
+    fontWeight: 'bold',
+  },
+  tilePoint: {
+    fontSize: 12 * fontScale,
+    color: '#333',
+  },
   letterCard: {
     backgroundColor: '#fcd34d',
     borderRadius: 4,
@@ -284,8 +310,8 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     backgroundColor: '#10b981',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: 10 * fontScale,
+    paddingHorizontal: 20 * fontScale,
     borderRadius: 8,
     alignSelf: 'center',
     marginBottom: 20,
@@ -293,6 +319,6 @@ const styles = StyleSheet.create({
   confirmText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 16 * fontScale,
   },
 });

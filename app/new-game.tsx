@@ -1,10 +1,12 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 
 const NewGamePage = ({ navigation }: any) => {
+  const router = useRouter();
+
   const startGame = (duration: number) => {
-    // süreye göre eşleştirme yapılacak (backend'de)
-    navigation.navigate('GamePage', { duration });
+    router.push({ pathname: '/Game', params: { duration: duration.toString() } });
   };
 
   return (
