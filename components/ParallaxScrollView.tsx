@@ -1,3 +1,7 @@
+{/*
+components/ParallaxScrollView.tsx
+Amaç: Paralaks kaydırma etkisi (scrolling effect) ile daha görsel açıdan etkileyici bir kullanıcı deneyimi sağlar.
+Ne Yapmalısın?: Eğer paralaks kaydırma efekti isteyen bir ekran varsa, bu bileşeni tutman gerekebilir. Aksi takdirde, silebilirsin.
 import type { PropsWithChildren, ReactElement } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, {
@@ -80,3 +84,4 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 });
+*/}

@@ -1,72 +1,61 @@
+//register.tsx
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, Alert } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import { register } from '../services/authService';
 
-const RegisterScreen: React.FC = () => {
-  const [username, setUsername] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [confirmPassword, setConfirmPassword] = useState<string>('');
+const RegisterScreen = () => {
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const router = useRouter();
 
   const handleRegister = async () => {
-    if (password !== confirmPassword) {
-      Alert.alert('Hata', 'Şifreler uyuşmuyor!');
-      return;
-    }
-
     try {
-      const response = await register(username, email, password);
-      console.log('Kayıt başarılı:', response);
-      Alert.alert('Başarılı', 'Kayıt işlemi başarılı!');
-      // örnek: navigation.navigate('Login')
-    } catch (error) {
-      console.error('Kayıt işlemi sırasında bir hata oluştu:', error);
-      Alert.alert('Hata', 'Kayıt işlemi sırasında bir hata oluştu.');
+      await register(username, email, password);
+      Alert.alert('Başarılı', 'Kayıt başarılı! Şimdi giriş yapabilirsiniz.');
+      router.replace('/login');
+    } catch (error: any) {
+      Alert.alert('Hata', error.message || 'Kayıt başarısız.');
     }
   };
 
   return (
-    <View style={{ padding: 16 }}>
-      <Text>Kullanıcı Adı</Text>
-      <TextInput
-        value={username}
-        onChangeText={setUsername}
-        placeholder="Kullanıcı adınızı girin"
-        autoCapitalize="none"
-        style={{ borderBottomWidth: 1, marginBottom: 12 }}
-      />
+    <View style={styles.container}>
+      <Text style={styles.label}>Kullanıcı Adı</Text>
+      <TextInput style={styles.input} value={username} onChangeText={setUsername} />
 
-      <Text>Email</Text>
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        placeholder="Email adresinizi girin"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        style={{ borderBottomWidth: 1, marginBottom: 12 }}
-      />
+      <Text style={styles.label}>Email</Text>
+      <TextInput style={styles.input} value={email} onChangeText={setEmail} />
 
-      <Text>Şifre</Text>
-      <TextInput
-        value={password}
-        onChangeText={setPassword}
-        placeholder="Şifrenizi girin"
-        secureTextEntry
-        style={{ borderBottomWidth: 1, marginBottom: 12 }}
-      />
-
-      <Text>Şifre (Tekrar)</Text>
-      <TextInput
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        placeholder="Şifrenizi tekrar girin"
-        secureTextEntry
-        style={{ borderBottomWidth: 1, marginBottom: 16 }}
-      />
+      <Text style={styles.label}>Şifre</Text>
+      <TextInput style={styles.input} secureTextEntry value={password} onChangeText={setPassword} />
 
       <Button title="Kayıt Ol" onPress={handleRegister} />
+
+      <TouchableOpacity onPress={() => router.push('/login')}>
+        <Text style={{ color: 'blue', marginTop: 10, textAlign: 'center' }}>Zaten hesabınız var mı? Giriş yapın</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
 export default RegisterScreen;
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    marginTop: 50,
+  },
+  label: {
+    marginBottom: 5,
+    fontSize: 16,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginBottom: 12,
+    padding: 8,
+    borderRadius: 4,
+  },
+});

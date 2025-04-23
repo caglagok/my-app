@@ -1,12 +1,14 @@
+//app.js
 import React, { useEffect, useState } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import axios from 'axios';
+import { API_URL } from './config';
 
 export default function App() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    axios.get('http://localhost:3001')
+    axios.get(`${API_URL}/api/`)  // API_URL'yi burada kullan
       .then(response => setMessage(response.data))
       .catch(error => {
         console.log("Bağlantı hatası", error);

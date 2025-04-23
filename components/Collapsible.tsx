@@ -1,3 +1,7 @@
+{/*
+components/Collapsible.tsx
+Amaç: Açılabilir/kapanabilir (collapsible) içerik bölümleri oluşturmak için kullanılan bileşen. Kullanıcılar başlıkları tıklayarak içerik alanlarını açıp kapatabiliyor.
+Ne Yapmalısın?: Eğer uygulamanın UI'sında açılabilir/kapanabilir içerik alanları kullanıyorsan, bu bileşeni tutman gerekebilir. Aksi halde silebilirsin.
 import { PropsWithChildren, useState } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 
@@ -43,3 +47,4 @@ const styles = StyleSheet.create({
     marginLeft: 24,
   },
 });
+*/}

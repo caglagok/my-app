@@ -1,3 +1,4 @@
+//authServices.ts
 import { API_URL } from '../config';
 
 // Giriş Yapma fonksiyonu
@@ -6,44 +7,49 @@ export const login = async (email: string, password: string) => {
     const response = await fetch(`${API_URL}/api/users/login`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({
+        email, // Burada email'i doğru gönderiyoruz
+        sifre: password, // backend'e uygun olarak şifreyi 'sifre' olarak gönderiyoruz
+      }),
     });
 
     if (!response.ok) {
-      throw new Error('Giriş başarısız');
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Giriş başarısız.');
     }
 
-    const data = await response.json();
-    return data;
+    return await response.json();
   } catch (error) {
     console.error('Login error:', error);
     throw error;
   }
 };
 
-export const register = async (
-  username: string,
-  email: string,
-  password: string
-): Promise<any> => {
-  const response = await fetch('https://example.com/api/register', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      username,
-      email,
-      password,
-    }),
-  });
+// Kayıt Olma fonksiyonu
+export const register = async (username: string, email: string, password: string) => {
+  try {
+    const response = await fetch(`${API_URL}/api/users/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        kullanici_adi: username,
+        email,
+        sifre: password,
+      }),
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Kayıt başarısız.');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Kayıt başarısız.');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Register error:', error);
+    throw error;
   }
-
-  return response.json();
 };

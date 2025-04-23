@@ -1,3 +1,4 @@
+{/*
 import { Text, type TextProps, StyleSheet } from 'react-native';
 
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -58,3 +59,4 @@ const styles = StyleSheet.create({
     color: '#0a7ea4',
   },
 });
+*/}
