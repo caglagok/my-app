@@ -69,12 +69,12 @@ export const getAllGames = async () => {
   }
 };
 // Oyun hamlesi yap
-export const createMove = async (gameId: string, playerId: string, placed: { x: number, y: number, letter: string }[]) => {
+export const createMove = async (gameId: string, playerId: string, placedLetters: any[]) => {
   try {
-    const response = await axios.post(`${API_URL}/api/games/create-Move`, {
+    const response = await axios.post(`${API_URL}/api/moves/create-Move`, {
       gameId,
       playerId,
-      placed
+      placed: placedLetters,
     });
     return response.data;  // Güncellenmiş oyun verisi
   } catch (error: any) {

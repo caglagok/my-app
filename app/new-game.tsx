@@ -1,3 +1,4 @@
+//new-games.tsx
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -8,28 +9,25 @@ const NewGamePage = ({ navigation }: any) => {
   const router = useRouter();
 
   const startGame = async (durationMinutes: number) => {
-    let type = '';
-    if (durationMinutes === 2) type = '2dk';
-    else if (durationMinutes === 5) type = '5dk';
-    else if (durationMinutes === 720) type = '12saat';
-    else if (durationMinutes === 1440) type = '24saat';
-
     try {
-      const userId = await AsyncStorage.getItem('userId'); // ⬅️ Burada kullanıcı ID alınıyor
-
+      const userId = await AsyncStorage.getItem('userId');
       if (!userId) {
-        console.error("Kullanıcı ID bulunamadı.");
+        console.error('Kullanıcı ID bulunamadı.');
         return;
       }
 
-      const gameData = await joinOrCreateGame(userId, durationMinutes); // ⬅️ userId parametresi eklendi
+      const gameData = await joinOrCreateGame(userId, durationMinutes);
+      if (!gameData || !gameData.gameId) {
+        console.error('Geçersiz oyun verisi:', gameData);
+        return;
+      }
 
       router.push({
         pathname: '/Game',
         params: {
           gameId: gameData.gameId,
           duration: durationMinutes.toString(),
-        }
+        },
       });
     } catch (error) {
       console.log('Oyun başlatılamadı:', error);
@@ -39,18 +37,20 @@ const NewGamePage = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Süre Seç</Text>
-      <TouchableOpacity style={styles.button} onPress={() => startGame(2)}>
-        <Text style={styles.buttonText}>2 Dakika (Hızlı)</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={() => startGame(5)}>
-        <Text style={styles.buttonText}>5 Dakika (Hızlı)</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={() => startGame(720)}>
-        <Text style={styles.buttonText}>12 Saat (Genişletilmiş)</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={() => startGame(1440)}>
-        <Text style={styles.buttonText}>24 Saat (Genişletilmiş)</Text>
-      </TouchableOpacity>
+      {[2, 5, 720, 1440].map((duration) => (
+        <TouchableOpacity
+          key={duration}
+          style={styles.button}
+          onPress={() => startGame(duration)}
+        >
+          <Text style={styles.buttonText}>
+            {duration === 2 && '2 Dakika (Hızlı)'}
+            {duration === 5 && '5 Dakika (Hızlı)'}
+            {duration === 720 && '12 Saat (Genişletilmiş)'}
+            {duration === 1440 && '24 Saat (Genişletilmiş)'}
+          </Text>
+        </TouchableOpacity>
+      ))}
     </View>
   );
 };
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   button: {
-    backgroundColor: '#4CAF50',  // Yeşil buton rengi
+    backgroundColor: '#4CAF50',
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 8,
