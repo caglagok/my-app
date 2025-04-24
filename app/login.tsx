@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { login } from '../services/authService';
 import axios from 'axios';
 import { API_URL } from '../config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -20,6 +21,10 @@ const LoginScreen = () => {
     try {
       const userData = await login(email, password); // login fonksiyonu çağrılıyor
       console.log('Login success:', userData);
+
+      // Kullanıcı ID'sini AsyncStorage'e kaydet
+      await AsyncStorage.setItem('userId', userData._id);
+
       router.replace('/HomePage'); // Başarılı giriş sonrası yönlendirme
     } catch (err: any) {
       console.error('Login error:', err);

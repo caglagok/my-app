@@ -1,30 +1,53 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { joinOrCreateGame } from '../services/gameServices';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const NewGamePage = ({ navigation }: any) => {
   const router = useRouter();
 
-  const startGame = (duration: number) => {
-    router.push({ pathname: '/Game', params: { duration: duration.toString() } });
+  const startGame = async (durationMinutes: number) => {
+    let type = '';
+    if (durationMinutes === 2) type = '2dk';
+    else if (durationMinutes === 5) type = '5dk';
+    else if (durationMinutes === 720) type = '12saat';
+    else if (durationMinutes === 1440) type = '24saat';
+
+    try {
+      const userId = await AsyncStorage.getItem('userId'); // ⬅️ Burada kullanıcı ID alınıyor
+
+      if (!userId) {
+        console.error("Kullanıcı ID bulunamadı.");
+        return;
+      }
+
+      const gameData = await joinOrCreateGame(userId, durationMinutes); // ⬅️ userId parametresi eklendi
+
+      router.push({
+        pathname: '/Game',
+        params: {
+          gameId: gameData.gameId,
+          duration: durationMinutes.toString(),
+        }
+      });
+    } catch (error) {
+      console.log('Oyun başlatılamadı:', error);
+    }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Süre Seç</Text>
-      
       <TouchableOpacity style={styles.button} onPress={() => startGame(2)}>
         <Text style={styles.buttonText}>2 Dakika (Hızlı)</Text>
       </TouchableOpacity>
-
       <TouchableOpacity style={styles.button} onPress={() => startGame(5)}>
         <Text style={styles.buttonText}>5 Dakika (Hızlı)</Text>
       </TouchableOpacity>
-
       <TouchableOpacity style={styles.button} onPress={() => startGame(720)}>
         <Text style={styles.buttonText}>12 Saat (Genişletilmiş)</Text>
       </TouchableOpacity>
-
       <TouchableOpacity style={styles.button} onPress={() => startGame(1440)}>
         <Text style={styles.buttonText}>24 Saat (Genişletilmiş)</Text>
       </TouchableOpacity>
