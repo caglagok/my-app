@@ -1,6 +1,8 @@
+//Game.tsx
 import React, { useEffect, useState } from 'react';
 import kelimeData from '../assets/kelimeler.json';
 import { useLocalSearchParams } from 'expo-router';
+import { joinOrCreateGame, getGame, createMove } from '../services/gameServices';
 
 import {
   View,
@@ -61,7 +63,6 @@ const bonusTiles = {
 
 const kelimeListesi: string[] = require('../assets/kelimeler.json');
 
-
 const screenWidth = Dimensions.get('window').width;
 const cellSize = Math.floor(screenWidth / 15); // 15x15 board
 const tileWidth = Math.floor(screenWidth / 8); // Harf kartlarının genişliği
@@ -93,12 +94,52 @@ export default function Game() {
   const [score, setScore] = useState<number>(0);
   const { duration } = useLocalSearchParams();
   const gameDuration = Number(duration);
+  const [isLoading, setIsLoading] = useState(false);
+  const [gameId, setGameId] = useState<string>(''); // Add this line
+  
+  const userId = 'someUserId'; // Bunu kullanıcı kimliğiyle değiştirin
 
   useEffect(() => {
-    console.log("Oyun süresi (dakika):", gameDuration);
-    setPlayerHand(generateRandomLetters(7));
-  }, []);
+    const fetchData = async () => {
+      // Fetch or create game on mount
+      const userId = 'someUserId'; // Replace with actual user ID
+      try {
+        const gameData = await joinOrCreateGame(userId, gameDuration);
+        console.log("Game data: ", gameData);
+        setBoard(gameData.board); // Assuming game data includes the board
+        setGameId(gameData.id);
+      } catch (error) {
+        console.error("Error creating or joining game: ", error);
+      }
 
+      // Generate random letters for player
+      setPlayerHand(generateRandomLetters(7));
+    };
+
+    fetchData();
+  }, [duration]);
+
+  const handleMoveConfirm = async () => {
+    setIsLoading(true);
+    try {
+      const formattedPlacedLetters = placedLetters.map(tile => ({
+        x: tile.row,
+        y: tile.col,
+        letter: tile.letter
+      }));
+  
+      const moveData = await createMove(gameId, userId, formattedPlacedLetters); // playerId yerine userId kullandık
+      console.log("Move confirmed:", moveData);
+  
+      setBoard(moveData.board);
+      setScore(moveData.score);
+    } catch (error) {
+      console.error("Move confirmation failed:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   const getBonusType = (row: number, col: number): string => {
     if (bonusTiles.CENTER.some(tile => tile.row === row && tile.col === col)) return '★';
     if (bonusTiles.H3.some(tile => tile.row === row && tile.col === col)) return 'H3';
@@ -186,6 +227,33 @@ export default function Game() {
     }
   };
 
+  const renderBoard = () => {
+    return (
+      <ScrollView contentContainerStyle={styles.board}>
+        {board.map((row, rowIndex) => (
+          <View key={rowIndex} style={styles.row}>
+            {row.map((tile, colIndex) => (
+              <TouchableOpacity
+                key={colIndex}
+                style={[
+                  styles.tile,
+                  {
+                    backgroundColor: getBonusType(rowIndex, colIndex) ? 'yellow' : 'white',
+                    width: tileWidth,
+                    height: tileHeight
+                  }
+                ]}
+                onPress={() => handleTilePress(rowIndex, colIndex)}
+              >
+                <Text style={styles.tileText}>{tile}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ))}
+      </ScrollView>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -261,6 +329,11 @@ const styles = StyleSheet.create({
   boardContainer: { flex: 1 },
   board: {
     flexDirection: 'row', flexWrap: 'wrap', alignSelf: 'center', width: screenWidth
+  },
+  row: {
+    flexDirection: 'row',
+    width: screenWidth,
+    justifyContent: 'space-evenly', // Adjust based on your layout
   },
   cell: {
     width: cellSize,

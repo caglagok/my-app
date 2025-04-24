@@ -35,7 +35,7 @@ export const getGame = async (gameId: string) => {
     throw error;
   }
 };
- 
+
 // Aktif oyunları listele
 export const getActiveGames = async () => {
   try {
@@ -65,6 +65,20 @@ export const getAllGames = async () => {
     return response.data; // Tüm oyunlar
   } catch (error) {
     console.error('Tüm oyunlar alınamadı:', error);
+    throw error;
+  }
+};
+// Oyun hamlesi yap
+export const createMove = async (gameId: string, playerId: string, placed: { x: number, y: number, letter: string }[]) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/games/create-Move`, {
+      gameId,
+      playerId,
+      placed
+    });
+    return response.data;  // Güncellenmiş oyun verisi
+  } catch (error: any) {
+    console.error('Hamle yapma hatası:', error.response?.data || error.message);
     throw error;
   }
 };
