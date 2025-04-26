@@ -1,4 +1,5 @@
-//register.tsx
+//app/register.tsx
+
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -11,30 +12,56 @@ const RegisterScreen = () => {
   const router = useRouter();
 
   const handleRegister = async () => {
+    if (!username || !email || !password) {
+      Alert.alert('Uyarı', 'Lütfen tüm alanları doldurun.');
+      return;
+    }
+
     try {
-      await register(username, email, password);
+      const userData = await register(username, email, password);
+      console.log('Kayıt başarılı:', userData);
       Alert.alert('Başarılı', 'Kayıt başarılı! Şimdi giriş yapabilirsiniz.');
-      router.replace('/login');
+      router.replace('/login'); // Başarılı kayıt sonrası login ekranına
     } catch (error: any) {
-      Alert.alert('Hata', error.message || 'Kayıt başarısız.');
+      Alert.alert('Hata', error.message || 'Kayıt sırasında bir hata oluştu.');
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Kullanıcı Adı</Text>
-      <TextInput style={styles.input} value={username} onChangeText={setUsername} />
+      <TextInput
+        style={styles.input}
+        value={username}
+        onChangeText={setUsername}
+        placeholder="Kullanıcı adınızı girin"
+      />
 
       <Text style={styles.label}>Email</Text>
-      <TextInput style={styles.input} value={email} onChangeText={setEmail} />
+      <TextInput
+        style={styles.input}
+        value={email}
+        onChangeText={setEmail}
+        placeholder="Email adresinizi girin"
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
 
       <Text style={styles.label}>Şifre</Text>
-      <TextInput style={styles.input} secureTextEntry value={password} onChangeText={setPassword} />
+      <TextInput
+        style={styles.input}
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+        placeholder="Şifrenizi girin"
+      />
 
       <Button title="Kayıt Ol" onPress={handleRegister} />
 
       <TouchableOpacity onPress={() => router.push('/login')}>
-        <Text style={{ color: 'blue', marginTop: 10, textAlign: 'center' }}>Zaten hesabınız var mı? Giriş yapın</Text>
+        <Text style={{ color: 'blue', marginTop: 10, textAlign: 'center' }}>
+          Zaten hesabınız var mı? Giriş yapın
+        </Text>
       </TouchableOpacity>
     </View>
   );

@@ -1,11 +1,27 @@
-import React, { useState } from 'react';
+//completed-games.tsx
+import React, { useState, useEffect } from 'react';
 import { View, Text, Button, StyleSheet, FlatList } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getCompletedGames } from '../services/gameServices';
 
 const CompletedGamesPage = ({ navigation }: any) => {
-  const [completedGames, setCompletedGames] = useState([
-    { id: '1', gameName: 'Kelime Mayınları', winner: 'Ali' },
-    { id: '2', gameName: 'Hızlı Kelimeler', winner: 'Zeynep' },
-  ]);
+  const [completedGames, setCompletedGames] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchCompletedGames = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) return;
+
+        const games = await getCompletedGames(userId);
+        setCompletedGames(games);
+      } catch (error) {
+        console.error('Biten oyunlar alınamadı:', error);
+      }
+    };
+
+    fetchCompletedGames();
+  }, []);
 
   const renderItem = ({ item }: any) => (
     <View style={styles.gameItem}>

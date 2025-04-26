@@ -1,7 +1,8 @@
 //gameServices.ts
 import { API_URL } from '../config';
 import axios from 'axios';
-  
+import { ActiveGame } from '../app/types';
+
 // Yeni oyun başlat
 export const joinOrCreateGame = async (userId: string, duration: number) => {
   const typeMap: { [key: number]: string } = {
@@ -37,26 +38,31 @@ export const getGame = async (gameId: string) => {
 };
 
 // Aktif oyunları listele
-export const getActiveGames = async () => {
+export const getActiveGames = async (userId: string): Promise<ActiveGame[]> => {
   try {
-    const response = await axios.get(`${API_URL}/api/games/active`);
-    return response.data; // Aktif oyunlar
+    const response = await fetch(`${API_URL}/api/games/active/${userId}`);
+    if (!response.ok) {
+      throw new Error('Aktif oyunlar alınamadı');
+    }
+    const data = await response.json();
+    return data; // Burada data'nın tipi ActiveGame[] olmalı
   } catch (error) {
-    console.error('Aktif oyunlar alınamadı:', error);
-    throw error;
+    console.error('Veri alma hatası:', error);
+    return []; // Hata durumunda boş dizi döneriz
   }
 };
 
 // Biten oyunları listele
-export const getCompletedGames = async () => {
+export const getCompletedGames = async (userId: string) => {
   try {
-    const response = await axios.get(`${API_URL}/api/games/completed`);
-    return response.data; // Biten oyunlar
+    const response = await axios.get(`${API_URL}/games/completed?userId=${userId}`);
+    return response.data;
   } catch (error) {
     console.error('Biten oyunlar alınamadı:', error);
     throw error;
   }
 };
+
 
 // Tüm oyunları listele
 export const getAllGames = async () => {

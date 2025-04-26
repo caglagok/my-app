@@ -318,27 +318,32 @@ export default function Game() {
   
   // Kelime puanı hesaplama
   const kelimePuaniHesapla = (): number => {
-    let kelime = '';
-    let toplamPuan = 0;
-    let kelimeKatsayi = 1;
+  let kelime = '';
+  let toplamPuan = 0;
+  let kelimeKatsayi = 1;
 
-    for (const tile of placedLetters) {
-      const letter = tile.letter;
-      const puan = letterPool[letter]?.point || 0;
-      const bonus = getBonusType(tile.row, tile.col);
+  for (const tile of placedLetters) {
+    const letter = tile.letter;
+    const puan = letterPool[letter]?.point || 0;
+    const bonus = getBonusType(tile.row, tile.col);
 
-      if (bonus === 'H2') toplamPuan += puan * 2;
-      else if (bonus === 'H3') toplamPuan += puan * 3;
-      else toplamPuan += puan;
+    if (bonus === 'H2') toplamPuan += puan * 2;
+    else if (bonus === 'H3') toplamPuan += puan * 3;
+    else toplamPuan += puan;
 
-      if (bonus === 'K2') kelimeKatsayi *= 2;
-      else if (bonus === 'K3') kelimeKatsayi *= 3;
+    if (bonus === 'K2') kelimeKatsayi *= 2;
+    else if (bonus === 'K3') kelimeKatsayi *= 3;
+    else if (bonus === '★') kelimeKatsayi *= 2; // Orta kare
 
-      kelime += letter;
-    }
+    kelime += letter;
+  }
 
+  if (kelimeGecerliMi(kelime)) {
     return toplamPuan * kelimeKatsayi;
-  };
+  } else {
+    return 0; // Geçersiz kelime
+  }
+};
   
   // Kelime onaylama işlemi
   const onaylaKelime = () => {
