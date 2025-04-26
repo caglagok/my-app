@@ -5,53 +5,9 @@ import { useLocalSearchParams } from 'expo-router';
 import { getGame, createMove } from '../services/gameServices';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, Alert, ActivityIndicator } from 'react-native';
-
-type LetterTile = {
-  letter: string;
-  point: number;
-};
-
-type PlacedTile = {
-  row: number;
-  col: number;
-  letter: string;
-};
-
-const letterPool: { [key: string]: { count: number; point: number } } = {
-  A: { count: 12, point: 1 }, B: { count: 2, point: 3 }, C: { count: 2, point: 4 },
-  Ç: { count: 2, point: 4 }, D: { count: 2, point: 3 }, E: { count: 8, point: 1 },
-  F: { count: 1, point: 7 }, G: { count: 1, point: 5 }, Ğ: { count: 1, point: 8 },
-  H: { count: 1, point: 5 }, I: { count: 4, point: 2 }, İ: { count: 7, point: 1 },
-  J: { count: 1, point: 10 }, K: { count: 7, point: 1 }, L: { count: 7, point: 1 },
-  M: { count: 4, point: 2 }, N: { count: 5, point: 1 }, O: { count: 3, point: 2 },
-  Ö: { count: 1, point: 7 }, P: { count: 1, point: 5 }, R: { count: 6, point: 1 },
-  S: { count: 3, point: 2 }, Ş: { count: 2, point: 4 }, T: { count: 5, point: 1 },
-  U: { count: 3, point: 2 }, Ü: { count: 2, point: 3 }, V: { count: 1, point: 7 },
-  Y: { count: 2, point: 3 }, Z: { count: 2, point: 4 }, JOKER: { count: 2, point: 0 }
-};
-
-const bonusTiles = {
-  K3: [{ row: 0, col: 0 }, { row: 0, col: 14 }, { row: 14, col: 0 }, { row: 14, col: 14 }],
-  H3: [
-    { row: 1, col: 5 }, { row: 1, col: 9 }, { row: 5, col: 1 }, { row: 5, col: 13 },
-    { row: 9, col: 1 }, { row: 9, col: 13 }, { row: 13, col: 5 }, { row: 13, col: 9 }
-  ],
-  K2: [
-    { row: 1, col: 1 }, { row: 2, col: 2 }, { row: 3, col: 3 }, { row: 4, col: 4 },
-    { row: 10, col: 10 }, { row: 11, col: 11 }, { row: 12, col: 12 }, { row: 13, col: 13 },
-    { row: 1, col: 13 }, { row: 2, col: 12 }, { row: 3, col: 11 }, { row: 4, col: 10 },
-    { row: 10, col: 4 }, { row: 11, col: 3 }, { row: 12, col: 2 }, { row: 13, col: 1 }
-  ],
-  H2: [
-    { row: 0, col: 3 }, { row: 0, col: 11 }, { row: 2, col: 6 }, { row: 2, col: 8 },
-    { row: 3, col: 0 }, { row: 3, col: 7 }, { row: 3, col: 14 }, { row: 6, col: 2 },
-    { row: 6, col: 6 }, { row: 6, col: 8 }, { row: 6, col: 12 }, { row: 7, col: 3 },
-    { row: 7, col: 11 }, { row: 8, col: 2 }, { row: 8, col: 6 }, { row: 8, col: 8 },
-    { row: 8, col: 12 }, { row: 11, col: 0 }, { row: 11, col: 7 }, { row: 11, col: 14 },
-    { row: 12, col: 6 }, { row: 12, col: 8 }, { row: 14, col: 3 }, { row: 14, col: 11 }
-  ],
-  CENTER: [{ row: 7, col: 7 }]
-};
+import { LetterTile, PlacedTile } from '../types/gameTypes';
+import { letterPool } from '../constants/letterPool';
+import { bonusTiles } from '../constants/bonusTiles';
 
 const kelimeListesi: string[] = require('../assets/kelimeler.json');
 
@@ -318,32 +274,32 @@ export default function Game() {
   
   // Kelime puanı hesaplama
   const kelimePuaniHesapla = (): number => {
-  let kelime = '';
-  let toplamPuan = 0;
-  let kelimeKatsayi = 1;
-
-  for (const tile of placedLetters) {
-    const letter = tile.letter;
-    const puan = letterPool[letter]?.point || 0;
-    const bonus = getBonusType(tile.row, tile.col);
-
-    if (bonus === 'H2') toplamPuan += puan * 2;
-    else if (bonus === 'H3') toplamPuan += puan * 3;
-    else toplamPuan += puan;
-
-    if (bonus === 'K2') kelimeKatsayi *= 2;
-    else if (bonus === 'K3') kelimeKatsayi *= 3;
-    else if (bonus === '★') kelimeKatsayi *= 2; // Orta kare
-
-    kelime += letter;
-  }
-
-  if (kelimeGecerliMi(kelime)) {
-    return toplamPuan * kelimeKatsayi;
-  } else {
-    return 0; // Geçersiz kelime
-  }
-};
+    let kelime = '';
+    let toplamPuan = 0;
+    let kelimeKatsayi = 1;
+  
+    for (const tile of placedLetters) {
+      const letter = tile.letter;
+      const puan = letterPool[letter]?.point || 0;
+      const bonus = getBonusType(tile.row, tile.col);
+  
+      if (bonus === 'H2') toplamPuan += puan * 2;
+      else if (bonus === 'H3') toplamPuan += puan * 3;
+      else toplamPuan += puan;
+  
+      if (bonus === 'K2') kelimeKatsayi *= 2;
+      else if (bonus === 'K3') kelimeKatsayi *= 3;
+      else if (bonus === '★') kelimeKatsayi *= 2; // Orta kare
+  
+      kelime += letter;
+    }
+  
+    if (kelimeGecerliMi(kelime)) {
+      return toplamPuan * kelimeKatsayi;
+    } else {
+      return 0; // Geçersiz kelime
+    }
+  };
   
   // Kelime onaylama işlemi
   const onaylaKelime = () => {
