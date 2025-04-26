@@ -1,10 +1,9 @@
 //Game.tsx
 import React, { useEffect, useState } from 'react';
-import kelimeData from '../assets/kelimeler.json';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams } from 'expo-router';
 import { getGame, createMove } from '../services/gameServices';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, Alert, ActivityIndicator,SafeAreaView, Platform  } from 'react-native';
 import { LetterTile, PlacedTile } from '../types/gameTypes';
 import { letterPool } from '../constants/letterPool';
 import { bonusTiles } from '../constants/bonusTiles';
@@ -12,10 +11,11 @@ import { bonusTiles } from '../constants/bonusTiles';
 const kelimeListesi: string[] = require('../assets/kelimeler.json');
 
 const screenWidth = Dimensions.get('window').width;
-const cellSize = Math.floor(screenWidth / 15); // 15x15 board
-const tileWidth = Math.floor(screenWidth / 8); // Harf kartlarının genişliği
-const tileHeight = tileWidth * 1.25; // Harf kartlarının yüksekliği
-const fontScale = screenWidth / 400; // Ekran boyutuna göre ölçekleme
+const screenHeight = Dimensions.get('window').height;
+const cellSize = Math.floor(screenWidth / 15); 
+const tileWidth = Math.floor((screenWidth - 40) / 7); 
+const tileHeight = Math.min(tileWidth * 1.25, 50); 
+const fontScale = Math.min(screenWidth / 400, 1.2);
 
 const generateRandomLetters = (count: number): LetterTile[] => {
   const allLetters: LetterTile[] = [];
@@ -46,8 +46,12 @@ export default function Game() {
   const [gameLoaded, setGameLoaded] = useState(false);
   const [remainingLetters, setRemainingLetters] = useState(0);
   const { duration, gameId: routeGameId } = useLocalSearchParams();
-   // Oyun verilerini yükle
-   useEffect(() => {
+  const [opponentId, setOpponentId] = useState<string>('');
+  const [opponentName, setOpponentName] = useState<string>('');
+  const [opponentScore, setOpponentScore] = useState<number>(0);
+  const [playerName, setPlayerName] = useState<string>('');
+
+  useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
@@ -56,10 +60,8 @@ export default function Game() {
           Alert.alert("Hata", "Kullanıcı ID bulunamadı. Lütfen tekrar giriş yapın.");
           return;
         }
-
         setUserId(storedUserId);
 
-        // Oyun bilgisini al
         if (routeGameId) {
           const gameData = await getGame(routeGameId as string);
           if (gameData) {
@@ -67,6 +69,15 @@ export default function Game() {
             setScore(gameData.score || 0);
             setGameId(routeGameId as string);
             
+            // Rakip bilgilerini ayarla
+            if (gameData.players && gameData.players.length > 1) {
+              const opponent = gameData.players.find((player: any) => player.userId !== storedUserId);
+              if (opponent) {
+                setOpponentId(opponent.userId);
+                setOpponentName(opponent.userName || "Rakip");
+                setOpponentScore(opponent.score || 0);
+              }
+            }
             // Kalan harf sayısını hesapla
             const totalLetters = Object.values(letterPool).reduce((acc, { count }) => acc + count, 0);
             const usedLetters = gameData.moves 
@@ -202,32 +213,17 @@ export default function Game() {
       
       // Başarılı hamle sonrası işlemler
       if (moveData) {
-        // Güncellenmiş tahtayı ayarla
-        setBoard(moveData.board);
-        
-        // Skoru güncelle
-        setScore(moveData.score);
-        
-        // Kalan harf sayısını güncelle
-        setRemainingLetters(prev => prev - placedLetters.length);
-        
-        // Yerleştirilen harfleri temizle
-        setPlacedLetters([]);
-        
-        // Eldeki harfleri yenile
-        const yeniHarfler = generateRandomLetters(placedLetters.length);
+        setBoard(moveData.board);// Güncellenmiş tahtayı ayarla
+        setScore(moveData.score);// Skoru güncelle
+        setRemainingLetters(prev => prev - placedLetters.length);// Kalan harf sayısını güncelle
+        setPlacedLetters([]);// Yerleştirilen harfleri temizle
+        const yeniHarfler = generateRandomLetters(placedLetters.length);// Eldeki harfleri yenile
         setPlayerHand(prev => [...prev, ...yeniHarfler]);
-        
-        // Onaylama butonunu kaldır
-        setShowConfirm(false);
-        
-        // Başarılı mesajı göster
-        Alert.alert("Başarılı", "Hamle başarıyla kaydedildi.");
+        setShowConfirm(false);// Onaylama butonunu kaldır
+        Alert.alert("Başarılı", "Hamle başarıyla kaydedildi.");// Başarılı mesajı göster
       }
     } catch (error: any) {
       console.error("Hamle onaylanırken hata:", error);
-      
-      // Hata mesajını göster
       const errorMessage = error.response?.data?.message || "Hamleniz kaydedilemedi. Lütfen tekrar deneyin.";
       Alert.alert("Hata", errorMessage);
       
@@ -317,124 +313,133 @@ export default function Game() {
     }
   };
 
-  const renderBoard = () => {
-    return (
-      <ScrollView contentContainerStyle={styles.board}>
-        {board.map((row, rowIndex) => (
-          <View key={rowIndex} style={styles.row}>
-            {row.map((tile, colIndex) => (
+  return (
+    <SafeAreaView style={styles.container}>  
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        {/* Oyun Alanı */}
+        <View style={styles.boardArea}>
+          <View style={styles.board}>
+            {board.map((row, rowIndex) =>
+              row.map((cell, colIndex) => {
+                const bonus = getBonusType(rowIndex, colIndex);
+                const isPlaced = placedLetters.some(l => l.row === rowIndex && l.col === colIndex);
+  
+                return (
+                  <TouchableOpacity
+                    key={`${rowIndex}-${colIndex}`}
+                    style={[
+                      styles.cell,
+                      bonus === 'H2' && styles.h2,
+                      bonus === 'K2' && styles.k2,
+                      bonus === 'H3' && styles.h3,
+                      bonus === 'K3' && styles.k3,
+                      bonus === '★' && styles.center,
+                      isPlaced && styles.justPlaced
+                    ]}
+                    onPress={() => handleTilePress(rowIndex, colIndex)}
+                  >
+                    {!cell && <Text style={styles.cellText}>{bonus}</Text>}
+  
+                    {cell && (
+                      <View style={[
+                        styles.letterCard,
+                        isPlaced && styles.justPlacedTile
+                      ]}>
+                        <Text style={styles.letterText}>{cell}</Text>
+                        <Text style={styles.letterPoint}>
+                          {letterPool[cell]?.point || 0}
+                        </Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })
+            )}
+          </View>
+        </View>
+  
+        {/* Orta Bilgi Çubuğu */}
+        <View style={styles.header}>
+          {/* Sol - Kullanıcı bilgisi */}
+          <View style={styles.playerInfo}>
+            <Text style={styles.playerName}>{playerName}</Text>
+            <Text style={styles.score}>{score}</Text>
+          </View>
+  
+          {/* Orta - Kalan harf */}
+          <View style={styles.centerInfo}>
+            <Text style={styles.remainingLabel}>Kalan</Text>
+            <Text style={styles.remainingCount}>{remainingLetters}</Text>
+          </View>
+  
+          {/* Sağ - Rakip bilgisi */}
+          <View style={styles.playerInfo}>
+            <Text style={styles.score}>{opponentScore}</Text>
+            <Text style={styles.opponentName}>{opponentName}</Text>
+          </View>
+        </View>
+  
+        {/* Alt Kısım - Harfler ve Onay */}
+        <View style={styles.bottomArea}>
+          <View style={styles.hand}>
+            {playerHand.map((tile, index) => (
               <TouchableOpacity
-                key={colIndex}
+                key={index}
                 style={[
                   styles.tile,
-                  {
-                    backgroundColor: getBonusType(rowIndex, colIndex) ? 'yellow' : 'white',
-                    width: tileWidth,
-                    height: tileHeight
-                  }
+                  selectedLetterIndex === index && styles.selectedTile
                 ]}
-                onPress={() => handleTilePress(rowIndex, colIndex)}
+                onPress={() => handleLetterPress(index)}
               >
-                <Text style={styles.tileText}>{tile}</Text>
+                <Text style={styles.letterText}>{tile.letter}</Text>
+                <Text style={styles.letterPoint}>{tile.point}</Text>
               </TouchableOpacity>
             ))}
           </View>
-        ))}
-      </ScrollView>
-    );
-  };
-
-  return (
-    <View style={styles.container}>
-      {/* Üst Bilgi Çubuğu */}
-      <View style={styles.header}>
-        <Text style={styles.score}>Puan: {score}</Text>
-        <Text style={styles.remaining}>Kalan Harf: {remainingLetters}</Text>
-      </View>
-
-      {/* Oyun Tahtası */}
-      <ScrollView style={styles.boardContainer}>
-        <View style={styles.board}>
-          {board.map((row, rowIndex) =>
-            row.map((cell, colIndex) => {
-              const bonus = getBonusType(rowIndex, colIndex);
-              const isPlaced = placedLetters.some(l => l.row === rowIndex && l.col === colIndex);
-              
-              return (
-                <TouchableOpacity
-                  key={`${rowIndex}-${colIndex}`}
-                  style={[
-                    styles.cell,
-                    bonus === 'H2' && styles.h2,
-                    bonus === 'K2' && styles.k2,
-                    bonus === 'H3' && styles.h3,
-                    bonus === 'K3' && styles.k3,
-                    bonus === '★' && styles.center,
-                    isPlaced && styles.justPlaced
-                  ]}
-                  onPress={() => handleTilePress(rowIndex, colIndex)}
-                >
-                  {!cell && <Text style={styles.cellText}>{bonus}</Text>}
-                  
-                  {cell && (
-                    <View style={[
-                      styles.letterCard,
-                      isPlaced && styles.justPlacedTile
-                    ]}>
-                      <Text style={styles.letterText}>{cell}</Text>
-                      <Text style={styles.letterPoint}>
-                        {letterPool[cell]?.point || 0}
-                      </Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            })
-          )}
+  
+          {/* Onaylama Butonu */}
+          <View style={styles.confirmContainer}>
+            <TouchableOpacity 
+              style={[
+                styles.confirmButton,
+                !showConfirm && styles.disabledButton
+              ]} 
+              onPress={handleMoveConfirm}
+              disabled={!showConfirm || isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text style={styles.confirmText}>
+                  {showConfirm ? "✓ Hamleyi Onayla" : "Harf Yerleştirin"}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
-
-      {/* Eldeki Harfler */}
-      <View style={styles.hand}>
-        {playerHand.map((tile, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.tile,
-              selectedLetterIndex === index && styles.selectedTile
-            ]}
-            onPress={() => handleLetterPress(index)}
-          >
-            <Text style={styles.letterText}>{tile.letter}</Text>
-            <Text style={styles.letterPoint}>{tile.point}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Onaylama Butonu */}
-      {showConfirm && (
-        <TouchableOpacity 
-          style={styles.confirmButton} 
-          onPress={handleMoveConfirm}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <Text style={styles.confirmText}>✓ Hamleyi Onayla</Text>
-          )}
-        </TouchableOpacity>
-      )}
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#f8f9fa', 
-    paddingTop: 40 
+    backgroundColor: '#f8f9fa',
+    paddingTop: Platform.OS === 'android' ? 30 : 0,
   },
+  boardArea: {
+    backgroundColor: '#f0f0f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+  },  
+  bottomArea: {
+    flex: 3, 
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderColor: '#cccccc',
+  },  
   centerContent: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -447,33 +452,100 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row', 
     justifyContent: 'space-between', 
-    marginHorizontal: 20, 
-    marginBottom: 10,
-    paddingVertical: 8,
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#e8f5e9',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#c8e6c9',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
   },
-  score: { 
-    fontSize: 18 * fontScale, 
+  playerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 2,
+  },
+  playerName: {
+    fontSize: 14 * fontScale,
     fontWeight: 'bold',
     color: '#2e7d32',
+    marginRight: 6,
+  },
+  opponentName: {
+    fontSize: 14 * fontScale,
+    fontWeight: 'bold',
+    color: '#d32f2f',
+    marginLeft: 6,
+  },
+  score: { 
+    fontSize: 16 * fontScale, 
+    fontWeight: 'bold',
+    color: '#333333',
+  },
+  centerInfo: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    backgroundColor: 'rgba(255, 152, 0, 0.2)',
+    borderRadius: 12,
+    paddingVertical: 2,
+  },
+  remainingLabel: {
+    fontSize: 10 * fontScale,
+    fontWeight: '400',
+    color: '#666',
+  },
+  remainingCount: { 
+    fontSize: 16 * fontScale, 
+    fontWeight: 'bold', 
+    color: '#ff9800' 
   },
   remaining: { 
     fontSize: 18 * fontScale, 
     fontWeight: 'bold', 
     color: '#ff9800' 
   },
-  boardContainer: { 
+  gameArea: {
     flex: 1,
-    marginVertical: 10,
+    flexDirection: 'column',
+  },
+  hand: {
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    flexWrap: 'wrap', 
+    padding: 10,
+    backgroundColor: '#e8f5e9',
+    borderBottomWidth: 1,
+    borderBottomColor: '#c8e6c9',
+    zIndex: 10, 
+  },
+  confirmContainer: {
+    padding: 6,
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    zIndex: 5,
+  },
+  boardContainer: { 
+    backgroundColor: '#f0f0f0',
+  },
+  boardContent: {
+    paddingVertical: 10,
+    paddingBottom: Platform.OS === 'ios' ? 50 : 20, 
   },
   board: {
+    width: cellSize * 15,
+    height: cellSize * 15,
     flexDirection: 'row', 
     flexWrap: 'wrap', 
-    alignSelf: 'center', 
-    width: screenWidth,
-    paddingBottom: 20,
-  },
+  },  
   cell: {
     width: cellSize,
     height: cellSize,
@@ -496,24 +568,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
-  h2: { backgroundColor: '#bbdefb' }, // Light blue
-  k2: { backgroundColor: '#f8bbd0' }, // Light pink
-  h3: { backgroundColor: '#64b5f6' }, // Medium blue
-  k3: { backgroundColor: '#f06292' }, // Medium pink
-  center: { backgroundColor: '#ffd54f' }, // Amber
+  h2: { backgroundColor: '#bbdefb' }, 
+  k2: { backgroundColor: '#f8bbd0' }, 
+  h3: { backgroundColor: '#64b5f6' }, 
+  k3: { backgroundColor: '#f06292' }, 
+  center: { backgroundColor: '#ffd54f' },
   justPlaced: {
     borderWidth: 2,
     borderColor: '#4caf50',
-  },
-  hand: {
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    flexWrap: 'wrap', 
-    padding: 10,
-    backgroundColor: '#e8f5e9',
-    borderTopWidth: 1,
-    borderTopColor: '#c8e6c9',
   },
   tile: {
     width: tileWidth,
@@ -533,6 +595,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#ff9800',
     borderWidth: 2,
     borderColor: '#f57c00',
+    transform: [
+      { translateY: -3 }, 
+      { scale: 0.8 }     
+    ],
   },
   letterCard: {
     backgroundColor: '#ffd54f',
@@ -565,11 +631,10 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     backgroundColor: '#4CAF50',
-    paddingVertical: 12 * fontScale,
-    paddingHorizontal: 24 * fontScale,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     borderRadius: 8,
     alignSelf: 'center',
-    marginVertical: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -579,6 +644,10 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
     minWidth: 150,
+  },
+  disabledButton: {
+    backgroundColor: '#cccccc',
+    shadowOpacity: 0.1,
   },
   confirmText: {
     color: 'white',
