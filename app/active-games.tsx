@@ -13,6 +13,7 @@ const ActiveGamesPage = ({ navigation }: any) => {
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) return;
       const games = await getActiveGames(userId);
+      console.log(games);
       setActiveGames(games);
     };
     fetchActiveGames();

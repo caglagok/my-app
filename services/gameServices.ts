@@ -1,7 +1,7 @@
 //gameServices.ts
 import { API_URL } from '../config';
 import axios from 'axios';
-import { ActiveGame } from '../app/types';
+import { ActiveGame } from '../types/gameTypes';
 
 // Yeni oyun başlat
 export const joinOrCreateGame = async (userId: string, duration: number) => {
