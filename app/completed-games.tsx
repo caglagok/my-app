@@ -1,8 +1,9 @@
-//completed-games.tsx
+// app/completed-games.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, ImageBackground } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCompletedGames } from '../services/gameServices';
+import { MotiView } from 'moti';
 
 const CompletedGamesPage = ({ navigation }: any) => {
   const [completedGames, setCompletedGames] = useState<any[]>([]);
@@ -23,48 +24,109 @@ const CompletedGamesPage = ({ navigation }: any) => {
     fetchCompletedGames();
   }, []);
 
-  const renderItem = ({ item }: any) => (
-    <View style={styles.gameItem}>
+  const renderItem = ({ item, index }: { item: any; index: number }) => (
+    <MotiView
+      from={{ opacity: 0, translateY: 20 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ delay: index * 100, type: 'timing' }}
+      style={styles.gameItem}
+    >
       <Text style={styles.gameName}>{item.gameName}</Text>
       <Text style={styles.gameWinner}>Kazanan: {item.winner}</Text>
-      <Button title="Detaylar" onPress={() => navigation.navigate('GameDetails', { gameId: item.id })} />
-    </View>
+      <Pressable
+        onPress={() => navigation.navigate('GameDetails', { gameId: item._id })}
+        style={({ pressed }) => [
+          styles.detailButton,
+          { opacity: pressed ? 0.7 : 1 }
+        ]}
+      >
+        <Text style={styles.detailButtonText}>Detaylar</Text>
+      </Pressable>
+    </MotiView>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Biten Oyunlar</Text>
-      <FlatList
-        data={completedGames}
-        renderItem={renderItem}
-        keyExtractor={(item) => item._id} // burada backend'den gelen id _id olacak unutma!
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Henüz biten oyun yok.</Text>
-          </View>
-        }
-      />
-    </View>
+    <ImageBackground
+      source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlHv5feza9-EKXxCpRmKsoxzlZcc7IUEAHCg&s' }}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        <Text style={styles.title}>Biten Oyunlar</Text>
+        <FlatList
+          data={completedGames}
+          renderItem={renderItem}
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={{ paddingBottom: 20 }}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Henüz biten oyun yok.</Text>
+            </View>
+          }
+        />
+      </View>
+    </ImageBackground>
   );
 };
 
+export default CompletedGamesPage;
+
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  gameItem: { marginBottom: 15 },
-  gameName: { fontSize: 18, fontWeight: 'bold' },
-  gameWinner: { fontSize: 16, marginVertical: 5 },
-  emptyContainer: {
+  background: {
     flex: 1,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)', 
+    padding: 20,
+    paddingTop: 50,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#333',
+  },
+  gameItem: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  gameName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+  },
+  gameWinner: {
+    fontSize: 16,
+    marginTop: 8,
+    color: '#7f8c8d',
+  },
+  detailButton: {
+    marginTop: 15,
+    backgroundColor: '#27ae60',
+    paddingVertical: 12,
+    borderRadius: 10,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 50,
+  },
+  detailButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  emptyContainer: {
+    marginTop: 80,
+    alignItems: 'center',
   },
   emptyText: {
     fontSize: 18,
-    color: 'gray',
-  }  
+    color: '#7f8c8d',
+  },
 });
-
-export default CompletedGamesPage;
-
