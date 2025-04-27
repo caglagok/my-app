@@ -37,7 +37,12 @@ const CompletedGamesPage = ({ navigation }: any) => {
       <FlatList
         data={completedGames}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id} // burada backend'den gelen id _id olacak unutma!
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Henüz biten oyun yok.</Text>
+          </View>
+        }
       />
     </View>
   );
@@ -49,6 +54,17 @@ const styles = StyleSheet.create({
   gameItem: { marginBottom: 15 },
   gameName: { fontSize: 18, fontWeight: 'bold' },
   gameWinner: { fontSize: 16, marginVertical: 5 },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 50,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: 'gray',
+  }  
 });
 
 export default CompletedGamesPage;
+

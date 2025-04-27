@@ -38,7 +38,9 @@ const HomePage = ({ navigation, route }: any) => {
       {userInfo ? (
         <>
           <Text style={styles.title}>Hoş Geldin, {userInfo.username}!</Text>
-          <Text style={styles.infoText}>Başarı Yüzdesi: {calculateSuccessRate().toFixed(2)}%</Text>
+          <Text style={styles.infoText}>
+            Başarı Yüzdesi: {Number.isNaN(calculateSuccessRate()) ? '0.00' : calculateSuccessRate().toFixed(2)}%
+          </Text>
         </>
       ) : (
         <Text style={styles.title}>Yükleniyor...</Text>
