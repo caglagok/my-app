@@ -176,12 +176,14 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 8,
     textAlign: 'center',
+    fontFamily: 'Rubik',
   },
   subtitle: {
     fontSize: 16,
     color: '#666',
     marginBottom: 30,
     textAlign: 'center',
+    fontFamily: 'Rubik', 
   },
   inputContainer: {
     flexDirection: 'row',
@@ -201,9 +203,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 16,
     color: '#333',
+    fontFamily: 'Rubik',
   },
   passwordInput: {
-    paddingRight: 40, // Space for the eye icon
+    paddingRight: 40, 
   },
   eyeIcon: {
     position: 'absolute',
@@ -214,6 +217,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
     fontSize: 14,
+    fontFamily: 'Rubik',
   },
   forgotPassword: {
     alignSelf: 'flex-end',
@@ -222,6 +226,7 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     color: '#1976d2',
     fontSize: 14,
+    fontFamily: 'Rubik', 
   },
   loginButton: {
     backgroundColor: '#2196f3',
@@ -238,6 +243,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+    fontFamily: 'Rubik', 
   },
   registerLink: {
     marginTop: 24,
@@ -246,9 +252,11 @@ const styles = StyleSheet.create({
   registerText: {
     fontSize: 15,
     color: '#666',
+    fontFamily: 'Rubik', 
   },
   registerTextBold: {
     fontWeight: 'bold',
     color: '#1976d2',
+    fontFamily: 'Rubik',
   },
 });

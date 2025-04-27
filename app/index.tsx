@@ -144,6 +144,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   title: {
+    fontFamily: 'Rubik',
     fontSize: 40,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -154,6 +155,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 5,
   },
   subtitle: {
+    fontFamily: 'Rubik',
     fontSize: 18,
     textAlign: 'center',
     color: '#ffffff',
@@ -191,6 +193,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(249, 115, 22, 0.9)',
   },
   buttonText: {
+    fontFamily: 'Rubik',
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',

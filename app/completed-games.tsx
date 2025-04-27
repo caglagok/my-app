@@ -82,6 +82,7 @@ const styles = StyleSheet.create({
     paddingTop: 50,
   },
   title: {
+    fontFamily: 'Rubik',
     fontSize: 26,
     fontWeight: 'bold',
     marginBottom: 20,
@@ -117,6 +118,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   detailButtonText: {
+    fontFamily: 'Rubik',
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
@@ -126,6 +128,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
+    fontFamily: 'Rubik',
     fontSize: 18,
     color: '#7f8c8d',
   },

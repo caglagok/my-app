@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   },
   container: { flex: 1, backgroundColor: '#f0f4f8', paddingTop: 40, paddingHorizontal: 20 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f0f4f8' },
-  title: { fontSize: 26, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#333' },
+  title: { fontFamily: 'Rubik', fontSize: 26, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#333' },
   gameItem: {
     backgroundColor: '#fff',
     padding: 20,
@@ -116,11 +116,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   playButtonText: {
+    fontFamily: 'Rubik',
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
   },
   emptyText: {
+    fontFamily: 'Rubik',
     textAlign: 'center',
     marginTop: 50,
     fontSize: 18,

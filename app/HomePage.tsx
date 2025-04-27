@@ -318,6 +318,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   loadingText: {
+    fontFamily: 'Rubik',
     marginTop: 10,
     color: '#fff',
     fontSize: 18,
@@ -367,6 +368,7 @@ const styles = StyleSheet.create({
     borderColor: '#FFF',
   },
   levelText: {
+    fontFamily: 'Rubik',
     color: '#FFF',
     fontWeight: 'bold',
     fontSize: 14,
@@ -386,6 +388,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   statText: {
+    fontFamily: 'Rubik',
     marginLeft: 6,
     color: '#555',
     fontSize: 14,
@@ -419,6 +422,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   badgesTitle: {
+    fontFamily: 'Rubik',
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 10,
@@ -451,6 +455,7 @@ const styles = StyleSheet.create({
     borderColor: '#AAA',
   },
   badgeText: {
+    fontFamily: 'Rubik',
     marginTop: 5,
     fontSize: 12,
     textAlign: 'center',
@@ -477,6 +482,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   buttonText: {
+    fontFamily: 'Rubik',
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
@@ -493,6 +499,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   statsTitle: {
+    fontFamily: 'Rubik',
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 16,

@@ -292,6 +292,7 @@ const styles = StyleSheet.create({
     marginVertical: 40,
   },
   title: {
+    fontFamily: 'Rubik',
     fontSize: 28,
     fontWeight: 'bold',
     color: '#333',
@@ -299,6 +300,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
+    fontFamily: 'Rubik',
     fontSize: 16,
     color: '#666',
     marginBottom: 30,
@@ -318,6 +320,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   input: {
+    fontFamily: 'Rubik',
     flex: 1,
     paddingVertical: 14,
     fontSize: 16,
@@ -358,6 +361,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loginText: {
+    fontFamily: 'Rubik',
     fontSize: 15,
     color: '#666',
   },

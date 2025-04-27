@@ -179,6 +179,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   title: {
+    fontFamily: 'Rubik',
     fontSize: 32,
     fontWeight: 'bold',
     marginTop: height * 0.15,
@@ -217,6 +218,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   buttonText: {
+    fontFamily: 'Rubik',
     fontSize: 18,
     fontWeight: '700',
     color: 'white',
