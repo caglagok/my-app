@@ -111,11 +111,7 @@ const LoginScreen = () => {
             </View>
             
             {error ? <Text style={styles.error}>{error}</Text> : null}
-            
-            <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>Şifremi Unuttum</Text>
-            </TouchableOpacity>
-            
+                      
             <TouchableOpacity 
               style={styles.loginButton} 
               onPress={handleLogin}
