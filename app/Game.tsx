@@ -2,21 +2,19 @@
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams } from 'expo-router';
-import { getGame, createMove } from '../services/gameServices';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, Alert, ActivityIndicator,SafeAreaView, Platform  } from 'react-native';
+import { getGame } from '../services/gameServices';
+import { submitMove, getMovesByGame } from '../services/moveServices';
+import { View, Text, StyleSheet, Platform, TouchableOpacity, Dimensions, ScrollView, Alert, ActivityIndicator, SafeAreaView } from 'react-native';
 import { LetterTile, PlacedTile } from '../types/gameTypes';
 import { letterPool } from '../constants/letterPool';
 import { bonusTiles } from '../constants/bonusTiles';
-
 const kelimeListesi: string[] = require('../assets/kelimeler.json');
-
 const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+//const screenHeight = Dimensions.get('window').height;
 const cellSize = Math.floor(screenWidth / 15); 
 const tileWidth = Math.floor((screenWidth - 40) / 7); 
 const tileHeight = Math.min(tileWidth * 1.25, 50); 
 const fontScale = Math.min(screenWidth / 400, 1.2);
-
 const generateRandomLetters = (count: number): LetterTile[] => {
   const allLetters: LetterTile[] = [];
   Object.entries(letterPool).forEach(([letter, { count, point }]) => {
@@ -26,13 +24,13 @@ const generateRandomLetters = (count: number): LetterTile[] => {
   });
   const hand: LetterTile[] = [];
   for (let i = 0; i < count; i++) {
+    if (allLetters.length === 0) break;
     const index = Math.floor(Math.random() * allLetters.length);
     hand.push(allLetters[index]);
     allLetters.splice(index, 1);
   }
   return hand;
 };
-
 export default function Game() {
   const [playerHand, setPlayerHand] = useState<LetterTile[]>([]);
   const [board, setBoard] = useState<string[][]>(Array(15).fill(null).map(() => Array(15).fill('')));
@@ -45,53 +43,80 @@ export default function Game() {
   const [userId, setUserId] = useState<string>('');
   const [gameLoaded, setGameLoaded] = useState(false);
   const [remainingLetters, setRemainingLetters] = useState(0);
+  const [isFirstMove, setIsFirstMove] = useState(true);
   const { duration, gameId: routeGameId } = useLocalSearchParams();
   const [opponentId, setOpponentId] = useState<string>('');
   const [opponentName, setOpponentName] = useState<string>('');
   const [opponentScore, setOpponentScore] = useState<number>(0);
   const [playerName, setPlayerName] = useState<string>('');
+  const [moves, setMoves] = useState<any[]>([]);
+  const [isCurrentTurn, setIsCurrentTurn] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
         const storedUserId = await AsyncStorage.getItem('userId');
+        const storedUsername = await AsyncStorage.getItem('username');       
         if (!storedUserId) {
           Alert.alert("Hata", "Kullanıcı ID bulunamadı. Lütfen tekrar giriş yapın.");
           return;
-        }
+        }        
         setUserId(storedUserId);
-
+        setPlayerName(storedUsername || "Oyuncu");
         if (routeGameId) {
-          const gameData = await getGame(routeGameId as string);
+          const gameData = await getGame(routeGameId as string);          
           if (gameData) {
-            setBoard(gameData.board || Array(15).fill(null).map(() => Array(15).fill('')));
-            setScore(gameData.score || 0);
             setGameId(routeGameId as string);
+            const boardState = Array(15).fill(null).map(() => Array(15).fill(''));
+            const movesData = await getMovesByGame(routeGameId as string);
+            if (movesData && movesData.length > 0) {
+              setMoves(movesData);
+              setIsFirstMove(false);
+              movesData.forEach((move: any) => {
+                move.placed.forEach((tile: any) => {
+                  boardState[tile.y][tile.x] = tile.letter;
+                });
+              });
+            }
+            setBoard(boardState);
+            setIsCurrentTurn(gameData.currentTurn === storedUserId);
             
-            // Rakip bilgilerini ayarla
-            if (gameData.players && gameData.players.length > 1) {
-              const opponent = gameData.players.find((player: any) => player.userId !== storedUserId);
-              if (opponent) {
-                setOpponentId(opponent.userId);
-                setOpponentName(opponent.userName || "Rakip");
-                setOpponentScore(opponent.score || 0);
+            if (gameData.scores && gameData.scores.length > 0) {
+              const playerScore = gameData.scores.find(
+                (s: any) => s.player === storedUserId || s.player._id === storedUserId
+              );
+              if (playerScore) {
+                setScore(playerScore.score || 0);
               }
             }
-            // Kalan harf sayısını hesapla
+            if (gameData.players && gameData.players.length > 1) {
+              const opponent = gameData.players.find((player: any) => 
+                (player._id || player) !== storedUserId
+              );
+              if (opponent) {
+                setOpponentId(opponent._id || opponent);
+                setOpponentName(opponent.username || "Rakip");
+                if (gameData.scores && gameData.scores.length > 0) {
+                  const opponentScoreObj = gameData.scores.find(
+                    (s: any) => s.player === opponent._id || s.player._id === opponent._id
+                  );
+                  if (opponentScoreObj) {
+                    setOpponentScore(opponentScoreObj.score || 0);
+                  }
+                }
+              }
+            }
             const totalLetters = Object.values(letterPool).reduce((acc, { count }) => acc + count, 0);
-            const usedLetters = gameData.moves 
-              ? gameData.moves.reduce((acc: number, move: any) => acc + move.placed.length, 0) 
+            const usedLetters = movesData 
+              ? movesData.reduce((acc: number, move: any) => acc + move.placed.length, 0) 
               : 0;
-            setRemainingLetters(totalLetters - usedLetters);
+            setRemainingLetters(totalLetters - usedLetters - 7); // 7 eldeki harfler
           }
         }
-
-        // Başlangıç eli oluştur
         if (playerHand.length === 0) {
           setPlayerHand(generateRandomLetters(7));
         }
-        
         setGameLoaded(true);
       } catch (error) {
         console.error("Oyun verisi yüklenirken hata:", error);
@@ -103,23 +128,7 @@ export default function Game() {
 
     fetchData();
   }, [routeGameId]);
-
-
-  const handleCellPress = (row: number, col: number) => {
-    if (selectedLetterIndex === null || board[row][col] !== '') return;
-    const selectedLetter = playerHand[selectedLetterIndex];
-    const updatedBoard = [...board];
-    updatedBoard[row][col] = selectedLetter.letter;
-    setBoard(updatedBoard);
-    setPlacedLetters([...placedLetters, { row, col, letter: selectedLetter.letter }]);
-    const updatedHand = [...playerHand];
-    updatedHand.splice(selectedLetterIndex, 1);
-    setPlayerHand(updatedHand);
-    setSelectedLetterIndex(null);
-    setShowConfirm(true);
-  };
-  
-  // Bonus taş tipini döndürür
+ 
   const getBonusType = (row: number, col: number): string => {
     if (bonusTiles.CENTER.some(tile => tile.row === row && tile.col === col)) return '★';
     if (bonusTiles.H3.some(tile => tile.row === row && tile.col === col)) return 'H3';
@@ -129,137 +138,123 @@ export default function Game() {
     return '';
   };
 
-  // Taş yerleştirme işlemi
   const handleTilePress = (row: number, col: number) => {
-    // Eğer hücre doluysa ve yerleştirilen harflerden biriyse harfi geri al
-    const existingIndex = placedLetters.findIndex(l => l.row === row && l.col === col);
-    
-    if (board[row][col] !== '' && existingIndex === -1) {
-      // Daha önce oynanmış kalıcı bir taş, dokunulamaz
+    if (!isCurrentTurn) {
+      Alert.alert("Uyarı", "Şu anda sıra sizde değil.");
       return;
     }
-    
+    const existingIndex = placedLetters.findIndex(l => l.row === row && l.col === col);
+    if (board[row][col] !== '' && existingIndex === -1) {
+      return;
+    }
     if (existingIndex !== -1) {
-      // Yerleştirilen harfi geri al
       const removed = placedLetters[existingIndex];
       setPlacedLetters(prev => prev.filter((_, i) => i !== existingIndex));
-      
-      // Tahtadan harfi kaldır
       const newBoard = [...board];
       newBoard[row][col] = '';
       setBoard(newBoard);
-      
-      // Harfi ele geri ekle
       setPlayerHand(prev => [...prev, { 
         letter: removed.letter, 
         point: letterPool[removed.letter]?.point || 0 
       }]);
-      
-      // Yerleştirilen harf kalmadıysa onaylama butonunu kaldır
       if (placedLetters.length <= 1) {
         setShowConfirm(false);
       }
     } else if (selectedLetterIndex !== null && board[row][col] === '') {
-      // Seçilen harfi tahtaya yerleştir
-      const letter = playerHand[selectedLetterIndex].letter;
       
-      // Yerleştirilen harfler listesine ekle
+      if (isFirstMove) {
+        const centerUsed = placedLetters.some(tile => tile.row === 7 && tile.col === 7) || (row === 7 && col === 7);
+        if (!centerUsed) {
+          Alert.alert("Uyarı", "İlk hamlede merkez kare (7,7) kullanılmalıdır.");
+          return;
+        }
+      }      
+      const letter = playerHand[selectedLetterIndex].letter;
       const updatedLetters = [...placedLetters, { row, col, letter }];
       setPlacedLetters(updatedLetters);
-      
-      // Tahtayı güncelle
       const newBoard = [...board];
       newBoard[row][col] = letter;
       setBoard(newBoard);
-      
-      // Elden harfi çıkar
       const newHand = [...playerHand];
       newHand.splice(selectedLetterIndex, 1);
       setPlayerHand(newHand);
-      
-      // Seçimi temizle
       setSelectedLetterIndex(null);
-      
-      // Onaylama butonunu göster
       if (updatedLetters.length > 0) {
         setShowConfirm(true);
       }
     }
   };
 
-  // Eldeki harfe tıklama
   const handleLetterPress = (index: number) => {
+    if (!isCurrentTurn) {
+      Alert.alert("Uyarı", "Şu anda sıra sizde değil.");
+      return;
+    }
     setSelectedLetterIndex(prevIndex => prevIndex === index ? null : index);
   };
 
-  // Hamleyi sunucuya gönder
   const handleMoveConfirm = async () => {
+    if (!isCurrentTurn) {
+      Alert.alert("Uyarı", "Şu anda sıra sizde değil.");
+      return;
+    }
     if (placedLetters.length === 0) {
       Alert.alert("Uyarı", "Lütfen en az bir harf yerleştirin.");
       return;
     }
-
     setIsLoading(true);
     try {
-      // Backend'e gönderilecek verileri formatla
-      const formattedPlacedLetters = placedLetters.map(tile => ({
-        x: tile.row,
-        y: tile.col,
+      const formattedPlacedTiles = placedLetters.map(tile => ({
+        x: tile.col,
+        y: tile.row,
         letter: tile.letter
       }));
-
-      // Hamleyi sunucuya gönder
-      const moveData = await createMove(gameId, userId, formattedPlacedLetters);
-      
-      // Başarılı hamle sonrası işlemler
+      const moveData = await submitMove(
+        gameId, 
+        userId, 
+        formattedPlacedTiles, 
+        board,
+        isFirstMove
+      );
       if (moveData) {
-        setBoard(moveData.board);// Güncellenmiş tahtayı ayarla
-        setScore(moveData.score);// Skoru güncelle
-        setRemainingLetters(prev => prev - placedLetters.length);// Kalan harf sayısını güncelle
-        setPlacedLetters([]);// Yerleştirilen harfleri temizle
-        const yeniHarfler = generateRandomLetters(placedLetters.length);// Eldeki harfleri yenile
+        if (moveData.move && moveData.move.totalPoints) {
+          setScore(prev => prev + moveData.move.totalPoints);
+        }
+        setIsFirstMove(false);
+        setIsCurrentTurn(false);
+        setRemainingLetters(prev => prev - placedLetters.length);
+        setPlacedLetters([]);
+        const yeniHarfler = generateRandomLetters(placedLetters.length);
         setPlayerHand(prev => [...prev, ...yeniHarfler]);
-        setShowConfirm(false);// Onaylama butonunu kaldır
-        Alert.alert("Başarılı", "Hamle başarıyla kaydedildi.");// Başarılı mesajı göster
+        setShowConfirm(false);
+        Alert.alert("Başarılı", `Hamle başarıyla kaydedildi. ${moveData.move.totalPoints} puan kazandınız.`);
+        const updatedMoves = await getMovesByGame(gameId);
+        setMoves(updatedMoves);
       }
     } catch (error: any) {
       console.error("Hamle onaylanırken hata:", error);
-      const errorMessage = error.response?.data?.message || "Hamleniz kaydedilemedi. Lütfen tekrar deneyin.";
+      const errorMessage = error.message || "Hamleniz kaydedilemedi. Lütfen tekrar deneyin.";
       Alert.alert("Hata", errorMessage);
-      
-      // Eğer geçersiz kelime hatası dönerse yerleştirilen harfleri tahtadan kaldır
       if (errorMessage.includes("Geçersiz kelime")) {
-        placedLetters.forEach(({ row, col }) => {
-          const newBoard = [...board];
-          newBoard[row][col] = '';
-          setBoard(newBoard);
-        });
-        
-        // Harfleri ele geri ekle
         const returnedLetters = placedLetters.map(({ letter }) => ({
           letter,
           point: letterPool[letter]?.point || 0
         }));
         
         setPlayerHand(prev => [...prev, ...returnedLetters]);
+        const newBoard = [...board];
+        placedLetters.forEach(({ row, col }) => {
+          newBoard[row][col] = '';
+        });
+        setBoard(newBoard);
+        
         setPlacedLetters([]);
         setShowConfirm(false);
       }
     } finally {
       setIsLoading(false);
     }
-  };
-
-  if (!gameLoaded || isLoading) {
-    return (
-      <View style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color="#4CAF50" />
-        <Text style={styles.loadingText}>Yükleniyor...</Text>
-      </View>
-    );
   }
-
-  // Kelimenin geçerliliğini kontrol etme
   const kelimeGecerliMi = (kelime: string): boolean => {
     if (!Array.isArray(kelimeListesi)) {
       console.error('Kelime listesi uygun formatta değil.');
@@ -267,8 +262,6 @@ export default function Game() {
     }
     return kelimeListesi.includes(kelime.toLowerCase());
   };
-  
-  // Kelime puanı hesaplama
   const kelimePuaniHesapla = (): number => {
     let kelime = '';
     let toplamPuan = 0;
@@ -285,19 +278,16 @@ export default function Game() {
   
       if (bonus === 'K2') kelimeKatsayi *= 2;
       else if (bonus === 'K3') kelimeKatsayi *= 3;
-      else if (bonus === '★') kelimeKatsayi *= 2; // Orta kare
+      else if (bonus === '★') kelimeKatsayi *= 2; 
   
       kelime += letter;
     }
-  
     if (kelimeGecerliMi(kelime)) {
       return toplamPuan * kelimeKatsayi;
     } else {
-      return 0; // Geçersiz kelime
+      return 0; 
     }
   };
-  
-  // Kelime onaylama işlemi
   const onaylaKelime = () => {
     const kelime = placedLetters.map(k => k.letter).join('');
     if (kelimeGecerliMi(kelime)) {
@@ -312,6 +302,15 @@ export default function Game() {
       Alert.alert("Geçersiz Kelime", `"${kelime}" sözlükte bulunamadı.`);
     }
   };
+
+  if (!gameLoaded || isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#4CAF50" />
+        <Text style={styles.loadingText}>Yükleniyor...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>  
@@ -433,7 +432,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-  },  
+  }, 
+  turnIndicator: {
+    marginTop: 4,
+    fontSize: 12 * fontScale,
+    fontStyle: 'italic',
+    color: '#4CAF50',
+  }, 
   bottomArea: {
     flex: 3, 
     backgroundColor: '#ffffff',
