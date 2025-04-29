@@ -55,11 +55,13 @@ export const getActiveGames = async (userId: string): Promise<ActiveGame[]> => {
 // Biten oyunları listele
 export const getCompletedGames = async (userId: string) => {
   try {
-    const response = await axios.get(`${API_URL}/api/games/completed`);
+    const response = await axios.get(`${API_URL}/api/games/completed`, {
+      params: { userId }
+    });
     return response.data;
-  } catch (error) {
-    console.error('Biten oyunlar alınamadı:', error);
-    throw error;
+  } catch (error: any) {
+    console.error('Tamamlanmış oyunlar alınamadı:', error.response?.data || error.message);
+    return [];
   }
 };
 
@@ -68,23 +70,9 @@ export const getCompletedGames = async (userId: string) => {
 export const getAllGames = async () => {
   try {
     const response = await axios.get(`${API_URL}/api/games/all`);
-    return response.data; // Tüm oyunlar
-  } catch (error) {
-    console.error('Tüm oyunlar alınamadı:', error);
-    throw error;
-  }
-};
-// Oyun hamlesi yap
-export const createMove = async (gameId: string, playerId: string, placedLetters: any[]) => {
-  try {
-    const response = await axios.post(`${API_URL}/api/moves/create-Move`, {
-      gameId,
-      playerId,
-      placed: placedLetters,
-    });
-    return response.data;  // Güncellenmiş oyun verisi
+    return response.data;
   } catch (error: any) {
-    console.error('Hamle yapma hatası:', error.response?.data || error.message);
+    console.error('Tüm oyunlar alınamadı:', error.response?.data || error.message);
     throw error;
   }
 };
