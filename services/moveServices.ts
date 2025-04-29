@@ -10,7 +10,7 @@ export const submitMove = async (
     firstMove: boolean
   ) => {
     try {
-      const response = await axios.post(`${API_URL}/api/moves/create-Move`, {
+      const response = await axios.post(`${API_URL}/api/moves/createMove`, {
         gameId,
         playerId,
         placedTiles,
