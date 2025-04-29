@@ -3,6 +3,42 @@ import { API_URL } from '../config';
 import axios from 'axios';
 
 export const submitMove = async (
+  gameId: string,
+  playerId: string,
+  placedTiles: { x: number; y: number; letter: string }[],
+  boardState: string[][],
+  firstMove: boolean
+) => {
+  const response = await fetch(`${API_URL}/api/moves/createMove`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      gameId,
+      playerId,
+      placedTiles,
+      boardState,
+      firstMove
+    }),
+  });
+  console.log(JSON.stringify({
+    gameId,
+    playerId,
+    placedTiles,
+    boardState,
+    firstMove
+  }, null, 2));
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Hamle gönderilemedi.');
+  }
+
+  return await response.json();
+};
+{/*
+export const submitMove = async (
     gameId: string,
     playerId: string,
     placedTiles: { x: number, y: number, letter: string }[],
@@ -24,7 +60,7 @@ export const submitMove = async (
       throw new Error(error.response?.data?.message || 'Hamle gönderilirken hata oluştu.');
     }
   };
-  
+  */}
   // Belirli bir oyunun hamlelerini getir
   export const getMovesByGame = async (gameId: string) => {
     try {

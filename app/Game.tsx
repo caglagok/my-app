@@ -70,15 +70,26 @@ export default function Game() {
             setGameId(routeGameId as string);
             const boardState = Array(15).fill(null).map(() => Array(15).fill(''));
             const movesData = await getMovesByGame(routeGameId as string);
-            if (movesData && movesData.length > 0) {
-              setMoves(movesData);
-              setIsFirstMove(false);
-              movesData.forEach((move: any) => {
-                move.placed.forEach((tile: any) => {
-                  boardState[tile.y][tile.x] = tile.letter;
+
+            // Eğer movesData doğrudan bir dizi ise bu şekilde kontrol et
+            if (movesData && Array.isArray(movesData)) {
+              const moves = movesData;
+
+              if (moves.length > 0) {
+                setMoves(moves);
+                setIsFirstMove(false);
+                moves.forEach((move: any) => {
+                  move.placed.forEach((tile: any) => {
+                    boardState[tile.y][tile.x] = tile.letter;
+                  });
                 });
-              });
+              } else {
+                console.log("Hamle bulunamadı.");
+              }
+            } else {
+              console.error("Hamle verisi beklenenden farklı. movesData:", movesData);
             }
+
             setBoard(boardState);
             setIsCurrentTurn(gameData.currentTurn === storedUserId);
             
@@ -108,8 +119,8 @@ export default function Game() {
               }
             }
             const totalLetters = Object.values(letterPool).reduce((acc, { count }) => acc + count, 0);
-            const usedLetters = movesData 
-              ? movesData.reduce((acc: number, move: any) => acc + move.placed.length, 0) 
+            const usedLetters = movesData && Array.isArray(movesData.moves)
+              ? movesData.moves.reduce((acc: number, move: any) => acc + move.placed.length, 0)
               : 0;
             setRemainingLetters(totalLetters - usedLetters - 7); // 7 eldeki harfler
           }
@@ -125,9 +136,10 @@ export default function Game() {
         setIsLoading(false);
       }
     };
-
+  
     fetchData();
   }, [routeGameId]);
+  
  
   const getBonusType = (row: number, col: number): string => {
     if (bonusTiles.CENTER.some(tile => tile.row === row && tile.col === col)) return '★';
@@ -202,59 +214,82 @@ export default function Game() {
       Alert.alert("Uyarı", "Lütfen en az bir harf yerleştirin.");
       return;
     }
+    if (isFirstMove) {
+      const isCenterTileUsed = placedLetters.some(tile => tile.row === 7 && tile.col === 7);
+      if (!isCenterTileUsed) {
+        Alert.alert("Uyarı", "İlk hamlede merkez kare (7,7) kullanılmalıdır.");
+        return;
+      }
+    }
+  
     setIsLoading(true);
+  
     try {
       const formattedPlacedTiles = placedLetters.map(tile => ({
         x: tile.col,
         y: tile.row,
         letter: tile.letter
       }));
-      const moveData = await submitMove(
-        gameId, 
-        userId, 
-        formattedPlacedTiles, 
-        board,
+  
+      const currentBoard = board.map(row => [...row]); // Deep copy
+  
+      const response = await submitMove(
+        gameId,
+        userId,
+        formattedPlacedTiles,
+        currentBoard,
         isFirstMove
       );
-      if (moveData) {
-        if (moveData.move && moveData.move.totalPoints) {
-          setScore(prev => prev + moveData.move.totalPoints);
+  
+      if (response) {
+        if (response.move && response.move.totalPoints) {
+          setScore(prev => prev + response.move.totalPoints);
         }
+  
         setIsFirstMove(false);
         setIsCurrentTurn(false);
         setRemainingLetters(prev => prev - placedLetters.length);
         setPlacedLetters([]);
+  
         const yeniHarfler = generateRandomLetters(placedLetters.length);
         setPlayerHand(prev => [...prev, ...yeniHarfler]);
         setShowConfirm(false);
-        Alert.alert("Başarılı", `Hamle başarıyla kaydedildi. ${moveData.move.totalPoints} puan kazandınız.`);
+  
+        Alert.alert("Başarılı", `Hamle başarıyla kaydedildi. ${response.move.totalPoints} puan kazandınız.`);
+  
         const updatedMoves = await getMovesByGame(gameId);
-        setMoves(updatedMoves);
+        if (updatedMoves && updatedMoves.moves) {
+          setMoves(updatedMoves.moves);
+        }
       }
+  
     } catch (error: any) {
       console.error("Hamle onaylanırken hata:", error);
       const errorMessage = error.message || "Hamleniz kaydedilemedi. Lütfen tekrar deneyin.";
       Alert.alert("Hata", errorMessage);
-      if (errorMessage.includes("Geçersiz kelime")) {
-        const returnedLetters = placedLetters.map(({ letter }) => ({
-          letter,
-          point: letterPool[letter]?.point || 0
-        }));
-        
-        setPlayerHand(prev => [...prev, ...returnedLetters]);
-        const newBoard = [...board];
-        placedLetters.forEach(({ row, col }) => {
-          newBoard[row][col] = '';
-        });
-        setBoard(newBoard);
-        
-        setPlacedLetters([]);
-        setShowConfirm(false);
-      }
+  
+      // Hatalı durumda taşları geri al
+      const returnedLetters = placedLetters.map(({ letter }) => ({
+        letter,
+        point: letterPool[letter]?.point || 0
+      }));
+      
+      setPlayerHand(prev => [...prev, ...returnedLetters]);
+  
+      const newBoard = board.map(row => [...row]);
+      placedLetters.forEach(({ row, col }) => {
+        newBoard[row][col] = '';
+      });
+      setBoard(newBoard);
+      setPlacedLetters([]);
+      setShowConfirm(false);
+  
     } finally {
       setIsLoading(false);
     }
-  }
+  };
+  
+
   const kelimeGecerliMi = (kelime: string): boolean => {
     if (!Array.isArray(kelimeListesi)) {
       console.error('Kelime listesi uygun formatta değil.');
