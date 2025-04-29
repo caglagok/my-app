@@ -36,21 +36,19 @@ export const getGame = async (gameId: string) => {
     throw error;
   }
 };
-
-// Aktif oyunları listele
-export const getActiveGames = async (userId: string): Promise<ActiveGame[]> => {
+export const getActiveGames = async (userId: string) => {
   try {
-    const response = await fetch(`${API_URL}/api/games/active`);
-    if (!response.ok) {
-      throw new Error('Aktif oyunlar alınamadı');
-    }
-    const data = await response.json();
-    return data; // Burada data'nın tipi ActiveGame[] olmalı
+    const response = await axios.get(`${API_URL}/api/games/active`, {
+      params: { userId }
+    });
+    
+    return response.data;  // Make sure the backend is returning the correct data format
   } catch (error) {
     console.error('Veri alma hatası:', error);
     return []; // Hata durumunda boş dizi döneriz
   }
 };
+
 
 // Biten oyunları listele
 export const getCompletedGames = async (userId: string) => {
@@ -64,7 +62,6 @@ export const getCompletedGames = async (userId: string) => {
     return [];
   }
 };
-
 
 // Tüm oyunları listele
 export const getAllGames = async () => {

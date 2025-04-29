@@ -1,4 +1,3 @@
-// app/active-games.tsx
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ImageBackground, FlatList, ActivityIndicator, Alert, Pressable } from 'react-native';
 import { getActiveGames } from '../services/gameServices';
@@ -20,7 +19,7 @@ const ActiveGamesPage = ({ navigation }: any) => {
           return;
         }
         const games = await getActiveGames(userId);
-        console.log('Aktif oyunlar:', games);
+        console.log('Aktif oyunlar:', games); // log full response
         setActiveGames(games);
       } catch (error) {
         console.error('Aktif oyunlar çekilirken hata oluştu:', error);
@@ -35,12 +34,13 @@ const ActiveGamesPage = ({ navigation }: any) => {
   const renderItem = ({ item, index }: { item: ActiveGame; index: number }) => {
     const rakip = item.players.find((p) => p._id !== item.currentTurn._id);
 
+    if (!rakip) {
+      console.log('Rakip bulunamadı.');
+      return null;  // Handle this case appropriately
+    }
+
     return (
-      <ImageBackground
-        source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlHv5feza9-EKXxCpRmKsoxzlZcc7IUEAHCg&s' }}
-        style={styles.background}
-        resizeMode="cover"
-      >
+      <View style={styles.gameItemContainer}>
         <MotiView
           from={{ opacity: 0, translateY: 20 }}
           animate={{ opacity: 1, translateY: 0 }}
@@ -60,7 +60,7 @@ const ActiveGamesPage = ({ navigation }: any) => {
             <Text style={styles.playButtonText}>Oyna</Text>
           </Pressable>
         </MotiView>
-      </ImageBackground>
+      </View>
     );
   };
 
@@ -73,16 +73,20 @@ const ActiveGamesPage = ({ navigation }: any) => {
   }
 
   return (
-    <View style={styles.container}>
+    <ImageBackground
+      source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlHv5feza9-EKXxCpRmKsoxzlZcc7IUEAHCg&s' }}
+      style={styles.background}
+      resizeMode="cover"
+    >
       <Text style={styles.title}>Aktif Oyunlar</Text>
-      <FlatList
-        data={activeGames}
-        renderItem={renderItem}
-        keyExtractor={(item) => item._id}
-        contentContainerStyle={{ paddingBottom: 20 }}
-        ListEmptyComponent={<Text style={styles.emptyText}>Aktif oyun bulunamadı.</Text>}
-      />
-    </View>
+        <FlatList
+          data={activeGames}
+          renderItem={renderItem}
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={{ paddingBottom: 20 }}
+          ListEmptyComponent={<Text style={styles.emptyText}>Aktif oyun bulunamadı.</Text>}
+        />
+    </ImageBackground>
   );
 };
 
@@ -92,34 +96,41 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
   },
+  gameItemContainer: {
+    backgroundColor: 'transparent',
+    marginBottom: 20,
+    width: '100%', 
+  },
   container: { flex: 1, backgroundColor: '#f0f4f8', paddingTop: 40, paddingHorizontal: 20 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f0f4f8' },
   title: { fontFamily: 'Rubik', fontSize: 26, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#333' },
   gameItem: {
     backgroundColor: '#fff',
     padding: 20,
-    borderRadius: 16,
-    marginBottom: 15,
+    borderRadius: 20, 
+    marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowRadius: 15,
+    elevation: 8,
   },
-  gameName: { fontSize: 18, fontWeight: 'bold', color: '#2c3e50' },
+  gameName: { fontSize: 20, fontWeight: 'bold', color: '#2c3e50' },
   gamePlayers: { fontSize: 16, marginTop: 6, color: '#7f8c8d' },
   playButton: {
-    marginTop: 15,
+    marginTop: 20,
     backgroundColor: '#3498db',
-    paddingVertical: 12,
-    borderRadius: 10,
+    paddingVertical: 14,
+    borderRadius: 12, 
     alignItems: 'center',
+    width: '100%',
+    justifyContent: 'center',
   },
   playButtonText: {
     fontFamily: 'Rubik',
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 18, 
   },
   emptyText: {
     fontFamily: 'Rubik',
