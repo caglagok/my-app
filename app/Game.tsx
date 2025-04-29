@@ -324,6 +324,11 @@ export default function Game() {
     }
   };
   const onaylaKelime = () => {
+    if (!isCurrentTurn) {
+      Alert.alert("Uyarı", "Şu anda sıra sizde değil.");
+      return;
+    }
+  
     const kelime = placedLetters.map(k => k.letter).join('');
     if (kelimeGecerliMi(kelime)) {
       const puan = kelimePuaniHesapla();
@@ -336,7 +341,7 @@ export default function Game() {
     } else {
       Alert.alert("Geçersiz Kelime", `"${kelime}" sözlükte bulunamadı.`);
     }
-  };
+  };  
 
   if (!gameLoaded || isLoading) {
     return (
