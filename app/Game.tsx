@@ -172,7 +172,8 @@ export default function Game() {
       const formattedPlacedTiles = placedLetters.map(tile => ({
         x: tile.col,
         y: tile.row,
-        letter: tile.letter
+        letter: tile.letter,
+        isJoker: tile.isJoker || false
       }));
       const moveData = await submitMove(
         gameId, 
@@ -281,7 +282,7 @@ export default function Game() {
   
     for (const tile of placedLetters) {
       const letter = tile.letter;
-      const puan = letterPool[letter]?.point || 0;
+      const puan = tile.isJoker ? 0 : (letterPool[letter]?.point || 0);
       const bonus = getBonusType(tile.row, tile.col);
   
       if (bonus === 'H2') toplamPuan += puan * 2;
