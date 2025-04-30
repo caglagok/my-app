@@ -6,7 +6,7 @@ import { View, Text, StyleSheet, Platform, TouchableOpacity, Dimensions, ScrollV
 import { LetterTile, PlacedTile } from '../types/gameTypes';
 import { letterPool } from '../constants/letterPool';
 import { bonusTiles } from '../constants/bonusTiles';
-import { getGame } from '../services/gameServices';
+import { getGame} from '../services/gameServices';
 import { submitMove, getMovesByGame } from '../services/moveServices';
 
 const kelimeListesi: string[] = require('../assets/kelimeler.json');
@@ -189,6 +189,29 @@ export default function Game() {
       setIsLoading(false);
     }
   }
+  const handlePass = async () => {
+    if (!isCurrentTurn) {
+      Alert.alert("Uyarı", "Şu anda sıra sizde değil.");
+      return;
+    }
+  
+    setIsLoading(true);
+    try {
+      await submitMove(gameId, userId, [], board, isFirstMove); // boş hamle
+      const updatedGameData = await getGame(gameId);
+      setIsCurrentTurn(updatedGameData.currentTurn === userId);
+      setIsFirstMove(false);
+      setShowConfirm(false);
+      Alert.alert("Pas Geçildi", "Sıranız başarıyla pas geçildi.");
+      const updatedMoves = await getMovesByGame(gameId);
+      setMoves(updatedMoves);
+    } catch (error: any) {
+      console.error("Pas geçilirken hata:", error);
+      Alert.alert("Hata", "Pas geçilemedi. Lütfen tekrar deneyin.");
+    } finally {
+      setIsLoading(false);
+    }
+  };  
   const kelimeGecerliMi = (kelime: string): boolean => {
     if (!Array.isArray(kelimeListesi)) {
       console.error('Kelime listesi uygun formatta değil.');
@@ -332,7 +355,7 @@ export default function Game() {
   
     fetchData();
   }, [routeGameId]);
-  
+
   if (!gameLoaded || isLoading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -436,8 +459,8 @@ export default function Game() {
             ))}
           </View>
   
-          {/* Onaylama Butonu */}
           <View style={styles.confirmContainer}>
+            {/* Onaylama Butonu */}
             <TouchableOpacity 
               style={[
                 styles.confirmButton,
@@ -453,6 +476,14 @@ export default function Game() {
                   {showConfirm ? "✓ Hamleyi Onayla" : "Harf Yerleştirin"}
                 </Text>
               )}
+            </TouchableOpacity>
+            {/* PASS Butonu */}
+            <TouchableOpacity
+              style={[styles.confirmButton, { backgroundColor: '#999', marginTop: 10 }]}
+              onPress={handlePass}
+              disabled={!isCurrentTurn || isLoading}
+            >
+              <Text style={styles.confirmText}>✕ Pas Geç</Text>
             </TouchableOpacity>
           </View>
         </View>

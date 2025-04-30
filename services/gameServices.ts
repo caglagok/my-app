@@ -3,7 +3,6 @@ import { API_URL } from '../config';
 import axios from 'axios';
 import { ActiveGame } from '../types/gameTypes';
 
-// Yeni oyun başlat
 export const joinOrCreateGame = async (userId: string, duration: number) => {
   const typeMap: { [key: number]: string } = {
     2: '2dk',
@@ -38,9 +37,6 @@ export const joinOrCreateGame = async (userId: string, duration: number) => {
     throw error;
   }
 };
-
- 
-// Oyun bilgisini getir
 export const getGame = async (gameId: string) => {
   try {
     const response = await axios.get(`${API_URL}/api/games/${gameId}`);
@@ -62,9 +58,6 @@ export const getActiveGames = async (userId: string) => {
     return []; // Hata durumunda boş dizi döneriz
   }
 };
-
-
-// Biten oyunları listele
 export const getCompletedGames = async (userId: string) => {
   try {
     const response = await axios.get(`${API_URL}/api/games/completed`, {
@@ -76,8 +69,6 @@ export const getCompletedGames = async (userId: string) => {
     return [];
   }
 };
-
-// Tüm oyunları listele
 export const getAllGames = async () => {
   try {
     const response = await axios.get(`${API_URL}/api/games/all`);
