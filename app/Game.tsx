@@ -6,7 +6,7 @@ import { View, Text, StyleSheet, Platform, TouchableOpacity, Dimensions, ScrollV
 import { LetterTile, PlacedTile } from '../types/gameTypes';
 import { letterPool } from '../constants/letterPool';
 import { bonusTiles } from '../constants/bonusTiles';
-import { getGame} from '../services/gameServices';
+import { getGame, surrenderGame} from '../services/gameServices';
 import { submitMove, getMovesByGame } from '../services/moveServices';
 
 const kelimeListesi: string[] = require('../assets/kelimeler.json');
@@ -211,7 +211,21 @@ export default function Game() {
     } finally {
       setIsLoading(false);
     }
-  };  
+  }; 
+  const handleSurrender = async () => {
+    try {
+      const response = await surrenderGame(gameId, userId);
+  
+      if (response?.winner) {
+        Alert.alert("Oyun Bitti", `Oyunu teslim ettiniz. Kazanan: ${response.winner}`);
+      } else {
+        Alert.alert("Oyun Bitti", "Oyunu teslim ettiniz, ancak rakip yok.");
+      }
+    } catch (error) {
+      console.error('Teslim olma hatası:', error);
+      Alert.alert("Hata", "Teslim olma işlemi başarısız oldu.");
+    }
+  };
   const kelimeGecerliMi = (kelime: string): boolean => {
     if (!Array.isArray(kelimeListesi)) {
       console.error('Kelime listesi uygun formatta değil.');
@@ -366,7 +380,8 @@ export default function Game() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>  
+    <SafeAreaView style={styles.container}> 
+
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         {/* Oyun Alanı */}
         <View style={styles.boardArea}>
@@ -484,6 +499,14 @@ export default function Game() {
               disabled={!isCurrentTurn || isLoading}
             >
               <Text style={styles.confirmText}>✕ Pas Geç</Text>
+            </TouchableOpacity>
+            {/* Teslim Ol Butonu */}
+            <TouchableOpacity
+              style={[styles.confirmButton, { backgroundColor: '#f00', marginTop: 10 }]} // Kırmızı renk
+              onPress={handleSurrender}
+              disabled={isLoading} // Teslim olma sırasında butonun devre dışı kalmasını sağlıyoruz
+            >
+              <Text style={styles.confirmText}>✕ Teslim Ol</Text>
             </TouchableOpacity>
           </View>
         </View>

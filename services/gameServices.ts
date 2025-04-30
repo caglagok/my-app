@@ -78,3 +78,14 @@ export const getAllGames = async () => {
     throw error;
   }
 };
+export const surrenderGame = async (gameId: string, userId: string) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/games/${gameId}/surrender`, {
+      userId
+    });
+    return response.data; // Burada 'winner' bilgisi dönecek
+  } catch (error) {
+    console.error('Teslim olma işlemi sırasında hata:', error);
+    throw error; // Hata fırlatmak, UI tarafında yakalayabilmek için
+  }
+};
