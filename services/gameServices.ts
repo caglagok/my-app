@@ -20,7 +20,7 @@ export const joinOrCreateGame = async (userId: string, duration: number) => {
     });
 
     // Eğer oyun başlatıldıysa, oyun verilerini döndürüyoruz
-    const { message, gameId, players, type: gameType, startedAt, endedAt, isActive, currentTurn } = response.data;
+    const { message, gameId, players, type: gameType, startedAt, endedAt, isActive, currentTurn , mines,rewards} = response.data;
 
     return {
       message,
@@ -30,7 +30,9 @@ export const joinOrCreateGame = async (userId: string, duration: number) => {
       startedAt,
       endedAt,
       isActive,
-      currentTurn
+      currentTurn,
+      mines,
+      rewards
     };
   } catch (error: any) {
     console.error('Oyun başlatma hatası:', error.response?.data || error.message);
