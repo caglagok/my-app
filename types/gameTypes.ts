@@ -29,5 +29,7 @@ export type PlacedTile = {
   row: number;
   col: number;
   letter: string;
+  point: number;
+  isJoker?: boolean;
 };
   

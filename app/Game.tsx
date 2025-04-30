@@ -8,6 +8,7 @@ import { letterPool } from '../constants/letterPool';
 import { bonusTiles } from '../constants/bonusTiles';
 import { getGame, surrenderGame} from '../services/gameServices';
 import { submitMove, getMovesByGame } from '../services/moveServices';
+import { JokerPopup } from '../components/JokerPopup';
 
 const kelimeListesi: string[] = require('../assets/kelimeler.json');
 const screenWidth = Dimensions.get('window').width;
@@ -36,7 +37,36 @@ export default function Game() {
   const [playerName, setPlayerName] = useState<string>('');
   const [moves, setMoves] = useState<any[]>([]);
   const [isCurrentTurn, setIsCurrentTurn] = useState<boolean>(false);
+  const [isJokerVisible, setIsJokerVisible] = useState(false);
+  const [jokerLetter, setJokerLetter] = useState<string | null>(null);
+  const [pendingJokerPlacement, setPendingJokerPlacement] = useState<{
+    row: number; col: number; index: number;
+  } | null>(null);
 
+  const handleSelectJokerLetter = (letter: string) => {
+    if (!pendingJokerPlacement) return;
+
+    const { row, col, index } = pendingJokerPlacement;
+
+    // Joker seçilen harf yerleştiriliyor ama puanı 0 oluyor
+    const updatedLetters = [...placedLetters, { row, col, letter, point: 0, isJoker: true }];
+    setPlacedLetters(updatedLetters);
+
+    const newBoard = [...board];
+    newBoard[row][col] = letter;
+    setBoard(newBoard);
+
+    const newHand = [...playerHand];
+    newHand.splice(index, 1);
+    setPlayerHand(newHand);
+    
+    setSelectedLetterIndex(null);
+    setPendingJokerPlacement(null);
+    setIsJokerVisible(false);
+    if (updatedLetters.length > 0) {
+      setShowConfirm(true);
+    }
+  };
   const generateRandomLetters = (count: number): LetterTile[] => {
     const allLetters: LetterTile[] = [];
     Object.entries(letterPool).forEach(([letter, { count, point }]) => {
@@ -85,23 +115,34 @@ export default function Game() {
         setShowConfirm(false);
       }
     } else if (selectedLetterIndex !== null && board[row][col] === '') {
-      
+      const letterTile = playerHand[selectedLetterIndex];
+      const { letter, point } = letterTile;
+
+      if (letter === 'JOKER') {
+        setIsJokerVisible(true);
+        setPendingJokerPlacement({ row, col, index: selectedLetterIndex });
+        return;
+      }
+
       if (isFirstMove) {
         const centerUsed = placedLetters.some(tile => tile.row === 7 && tile.col === 7) || (row === 7 && col === 7);
         if (!centerUsed) {
           Alert.alert("Uyarı", "İlk hamlede merkez kare (7,7) kullanılmalıdır.");
           return;
         }
-      }      
-      const letter = playerHand[selectedLetterIndex].letter;
-      const updatedLetters = [...placedLetters, { row, col, letter }];
+      }
+
+      const updatedLetters = [...placedLetters, { row, col, letter, point }];
       setPlacedLetters(updatedLetters);
+
       const newBoard = [...board];
       newBoard[row][col] = letter;
       setBoard(newBoard);
+
       const newHand = [...playerHand];
       newHand.splice(selectedLetterIndex, 1);
       setPlayerHand(newHand);
+
       setSelectedLetterIndex(null);
       if (updatedLetters.length > 0) {
         setShowConfirm(true);
@@ -381,7 +422,6 @@ export default function Game() {
 
   return (
     <SafeAreaView style={styles.container}> 
-
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         {/* Oyun Alanı */}
         <View style={styles.boardArea}>
@@ -473,7 +513,7 @@ export default function Game() {
               </TouchableOpacity>
             ))}
           </View>
-  
+
           <View style={styles.confirmContainer}>
             {/* Onaylama Butonu */}
             <TouchableOpacity 
@@ -510,6 +550,12 @@ export default function Game() {
             </TouchableOpacity>
           </View>
         </View>
+        {/* Joker Harfi Seç Pop-up */}
+        <JokerPopup
+          isVisible={isJokerVisible}
+          onClose={() => setIsJokerVisible(false)}
+          onSelectLetter={handleSelectJokerLetter}
+        />
       </ScrollView>
     </SafeAreaView>
   );
