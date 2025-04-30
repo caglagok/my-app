@@ -11,20 +11,34 @@ export const joinOrCreateGame = async (userId: string, duration: number) => {
     720: '12saat',
     1440: '24saat'
   };
-  
+
   const type = typeMap[duration];
-  
+
   try {
     const response = await axios.post(`${API_URL}/api/games/join-or-create`, {
       userId,
       type
     });
-    return response.data;
+
+    // Eğer oyun başlatıldıysa, oyun verilerini döndürüyoruz
+    const { message, gameId, players, type: gameType, startedAt, endedAt, isActive, currentTurn } = response.data;
+
+    return {
+      message,
+      gameId,
+      players,
+      gameType,
+      startedAt,
+      endedAt,
+      isActive,
+      currentTurn
+    };
   } catch (error: any) {
     console.error('Oyun başlatma hatası:', error.response?.data || error.message);
     throw error;
   }
-}; 
+};
+
  
 // Oyun bilgisini getir
 export const getGame = async (gameId: string) => {

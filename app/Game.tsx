@@ -140,6 +140,13 @@ export default function Game() {
         board,
         isFirstMove
       );
+      const updatedGameData = await getGame(gameId);
+      if (updatedGameData.currentTurn === userId) {
+        setIsCurrentTurn(true);
+      } else {
+        setIsCurrentTurn(false);
+      }
+
       if (moveData) {
         if (moveData.move && moveData.move.totalPoints) {
           setScore(prev => prev + moveData.move.totalPoints);
@@ -154,9 +161,11 @@ export default function Game() {
         Alert.alert("Başarılı", `Hamle başarıyla kaydedildi. ${moveData.move.totalPoints} puan kazandınız.`);
         const updatedMoves = await getMovesByGame(gameId);
         setMoves(updatedMoves);
-        setIsCurrentTurn(false);
+        const updatedGameData = await getGame(gameId);
+        setIsCurrentTurn(updatedGameData.currentTurn === userId);
       }
-    } catch (error: any) {
+    } 
+    catch (error: any) {
       console.error("Hamle onaylanırken hata:", error);
       const errorMessage = error.message || "Hamleniz kaydedilemedi. Lütfen tekrar deneyin.";
       Alert.alert("Hata", errorMessage);
@@ -232,67 +241,87 @@ export default function Game() {
       setIsLoading(true);
       try {
         const storedUserId = await AsyncStorage.getItem('userId');
-        const storedUsername = await AsyncStorage.getItem('username');       
+        const storedUsername = await AsyncStorage.getItem('username');
+  
         if (!storedUserId) {
           Alert.alert("Hata", "Kullanıcı ID bulunamadı. Lütfen tekrar giriş yapın.");
           return;
-        }        
+        }
+  
         setUserId(storedUserId);
         setPlayerName(storedUsername || "Oyuncu");
+  
         if (routeGameId) {
-          const gameData = await getGame(routeGameId as string);          
-          if (gameData) {
-            setGameId(routeGameId as string);
-            const boardState = Array(15).fill(null).map(() => Array(15).fill(''));
-            const movesData = await getMovesByGame(routeGameId as string);
-            if (movesData && movesData.length > 0) {
-              setMoves(movesData);
-              setIsFirstMove(false);
-              movesData.forEach((move: any) => {
-                move.placed.forEach((tile: any) => {
-                  boardState[tile.y][tile.x] = tile.letter;
-                });
+          const gameData = await getGame(routeGameId as string);
+          const movesData = await getMovesByGame(routeGameId as string);
+  
+          setGameId(routeGameId as string);
+  
+          // 1. Tahta durumunu oluştur
+          const boardState = Array(15).fill(null).map(() => Array(15).fill(''));
+          if (movesData && movesData.length > 0) {
+            setMoves(movesData);
+            setIsFirstMove(false);
+            movesData.forEach((move: any) => {
+              move.placed.forEach((tile: any) => {
+                boardState[tile.y][tile.x] = tile.letter;
               });
-            }
-            setBoard(boardState);
-            setIsCurrentTurn(gameData.currentTurn === storedUserId);
-            
-            if (gameData.scores && gameData.scores.length > 0) {
-              const playerScore = gameData.scores.find(
-                (s: any) => s.player === storedUserId || s.player._id === storedUserId
-              );
-              if (playerScore) {
-                setScore(playerScore.score || 0);
-              }
-            }
-            if (gameData.players && gameData.players.length > 1) {
-              const opponent = gameData.players.find((player: any) => 
-                (player._id || player) !== storedUserId
-              );
-              if (opponent) {
-                setOpponentId(opponent._id || opponent);
-                setOpponentName(opponent.username || "Rakip");
-                if (gameData.scores && gameData.scores.length > 0) {
-                  const opponentScoreObj = gameData.scores.find(
-                    (s: any) => s.player === opponent._id || s.player._id === opponent._id
-                  );
-                  if (opponentScoreObj) {
-                    setOpponentScore(opponentScoreObj.score || 0);
-                  }
-                }
-              }
-            }
-            const totalLetters = Object.values(letterPool).reduce((acc, { count }) => acc + count, 0);
-            const usedLetters = movesData 
-              ? movesData.reduce((acc: number, move: any) => acc + move.placed.length, 0) 
-              : 0;
-            setRemainingLetters(totalLetters - usedLetters - 7); // 7 eldeki harfler
+            });
           }
+          setBoard(boardState);
+  
+          // 2. Sıra kimde kontrolü
+          if (gameData.currentTurn) {
+            const currentTurnId = typeof gameData.currentTurn === 'string'
+              ? gameData.currentTurn
+              : gameData.currentTurn._id;
+            setIsCurrentTurn(currentTurnId === storedUserId);
+          }
+  
+          // 3. Skor bilgisi
+          if (gameData.scores?.length > 0) {
+            const currentPlayerScore = gameData.scores.find(
+              (s: any) => s.player === storedUserId || s.player._id === storedUserId
+            );
+            if (currentPlayerScore) {
+              setScore(currentPlayerScore.score || 0);
+            }
+          }
+  
+          // 4. Rakip bilgisi ve skoru
+          if (gameData.players?.length > 1) {
+            const opponent = gameData.players.find((p: any) =>
+              (p._id || p) !== storedUserId
+            );
+  
+            const opponentId = opponent?._id || opponent;
+            const opponentName = opponent?.username || "Rakip";
+  
+            setOpponentId(opponentId);
+            setOpponentName(opponentName);
+  
+            const opponentScoreObj = gameData.scores.find(
+              (s: any) => s.player === opponentId || s.player._id === opponentId
+            );
+            if (opponentScoreObj) {
+              setOpponentScore(opponentScoreObj.score || 0);
+            }
+          }
+  
+          // 5. Kalan harf sayısı
+          const totalLetters = Object.values(letterPool).reduce((acc, { count }) => acc + count, 0);
+          const usedLetters = movesData
+            ? movesData.reduce((acc: number, move: any) => acc + move.placed.length, 0)
+            : 0;
+          setRemainingLetters(totalLetters - usedLetters - 7); // 7 eldeki harf
+  
+          // 6. El boşsa yeni harf üret
+          if (playerHand.length === 0) {
+            setPlayerHand(generateRandomLetters(7));
+          }
+  
+          setGameLoaded(true);
         }
-        if (playerHand.length === 0) {
-          setPlayerHand(generateRandomLetters(7));
-        }
-        setGameLoaded(true);
       } catch (error) {
         console.error("Oyun verisi yüklenirken hata:", error);
         Alert.alert("Hata", "Oyun verisi alınamadı. Lütfen tekrar deneyin.");
@@ -300,10 +329,10 @@ export default function Game() {
         setIsLoading(false);
       }
     };
-
+  
     fetchData();
   }, [routeGameId]);
-
+  
   if (!gameLoaded || isLoading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -361,7 +390,12 @@ export default function Game() {
         {/* Orta Bilgi Çubuğu */}
         <View style={styles.header}>
           {/* Sol - Kullanıcı bilgisi */}
-          <View style={styles.playerInfo}>
+          <View
+            style={[
+              styles.playerInfo,
+              isCurrentTurn && styles.currentTurnPlayer // sırada olan kullanıcı kırmızı olacak
+            ]}
+          >
             <Text style={styles.playerName}>{playerName}</Text>
             <Text style={styles.score}>{score}</Text>
           </View>
@@ -373,7 +407,12 @@ export default function Game() {
           </View>
   
           {/* Sağ - Rakip bilgisi */}
-          <View style={styles.playerInfo}>
+          <View
+            style={[
+              styles.playerInfo,
+              !isCurrentTurn && styles.currentTurnPlayer // sıra rakipteyse onun arka planı kırmızı olacak
+            ]}
+          >
             <Text style={styles.score}>{opponentScore}</Text>
             <Text style={styles.opponentName}>{opponentName}</Text>
           </View>
@@ -660,4 +699,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16 * fontScale,
   },
+  currentTurnPlayer: {
+    backgroundColor: '#FFCDD2', // açık kırmızı
+    borderRadius: 10,
+    padding: 5,
+  }  
 });
