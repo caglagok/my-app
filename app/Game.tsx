@@ -2,12 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams } from 'expo-router';
-import { getGame } from '../services/gameServices';
-import { submitMove, getMovesByGame } from '../services/moveServices';
 import { View, Text, StyleSheet, Platform, TouchableOpacity, Dimensions, ScrollView, Alert, ActivityIndicator, SafeAreaView } from 'react-native';
 import { LetterTile, PlacedTile } from '../types/gameTypes';
 import { letterPool } from '../constants/letterPool';
 import { bonusTiles } from '../constants/bonusTiles';
+import { getGame } from '../services/gameServices';
+import { submitMove, getMovesByGame } from '../services/moveServices';
 
 const kelimeListesi: string[] = require('../assets/kelimeler.json');
 const screenWidth = Dimensions.get('window').width;
