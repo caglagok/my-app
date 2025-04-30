@@ -8,29 +8,14 @@ import { View, Text, StyleSheet, Platform, TouchableOpacity, Dimensions, ScrollV
 import { LetterTile, PlacedTile } from '../types/gameTypes';
 import { letterPool } from '../constants/letterPool';
 import { bonusTiles } from '../constants/bonusTiles';
+
 const kelimeListesi: string[] = require('../assets/kelimeler.json');
 const screenWidth = Dimensions.get('window').width;
-//const screenHeight = Dimensions.get('window').height;
 const cellSize = Math.floor(screenWidth / 15); 
 const tileWidth = Math.floor((screenWidth - 40) / 7); 
 const tileHeight = Math.min(tileWidth * 1.25, 50); 
 const fontScale = Math.min(screenWidth / 400, 1.2);
-const generateRandomLetters = (count: number): LetterTile[] => {
-  const allLetters: LetterTile[] = [];
-  Object.entries(letterPool).forEach(([letter, { count, point }]) => {
-    for (let i = 0; i < count; i++) {
-      allLetters.push({ letter, point });
-    }
-  });
-  const hand: LetterTile[] = [];
-  for (let i = 0; i < count; i++) {
-    if (allLetters.length === 0) break;
-    const index = Math.floor(Math.random() * allLetters.length);
-    hand.push(allLetters[index]);
-    allLetters.splice(index, 1);
-  }
-  return hand;
-};
+
 export default function Game() {
   const [playerHand, setPlayerHand] = useState<LetterTile[]>([]);
   const [board, setBoard] = useState<string[][]>(Array(15).fill(null).map(() => Array(15).fill('')));
@@ -52,83 +37,22 @@ export default function Game() {
   const [moves, setMoves] = useState<any[]>([]);
   const [isCurrentTurn, setIsCurrentTurn] = useState<boolean>(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const storedUserId = await AsyncStorage.getItem('userId');
-        const storedUsername = await AsyncStorage.getItem('username');       
-        if (!storedUserId) {
-          Alert.alert("Hata", "Kullanıcı ID bulunamadı. Lütfen tekrar giriş yapın.");
-          return;
-        }        
-        setUserId(storedUserId);
-        setPlayerName(storedUsername || "Oyuncu");
-        if (routeGameId) {
-          const gameData = await getGame(routeGameId as string);          
-          if (gameData) {
-            setGameId(routeGameId as string);
-            const boardState = Array(15).fill(null).map(() => Array(15).fill(''));
-            const movesData = await getMovesByGame(routeGameId as string);
-            if (movesData && movesData.length > 0) {
-              setMoves(movesData);
-              setIsFirstMove(false);
-              movesData.forEach((move: any) => {
-                move.placed.forEach((tile: any) => {
-                  boardState[tile.y][tile.x] = tile.letter;
-                });
-              });
-            }
-            setBoard(boardState);
-            setIsCurrentTurn(gameData.currentTurn === storedUserId);
-            
-            if (gameData.scores && gameData.scores.length > 0) {
-              const playerScore = gameData.scores.find(
-                (s: any) => s.player === storedUserId || s.player._id === storedUserId
-              );
-              if (playerScore) {
-                setScore(playerScore.score || 0);
-              }
-            }
-            if (gameData.players && gameData.players.length > 1) {
-              const opponent = gameData.players.find((player: any) => 
-                (player._id || player) !== storedUserId
-              );
-              if (opponent) {
-                setOpponentId(opponent._id || opponent);
-                setOpponentName(opponent.username || "Rakip");
-                if (gameData.scores && gameData.scores.length > 0) {
-                  const opponentScoreObj = gameData.scores.find(
-                    (s: any) => s.player === opponent._id || s.player._id === opponent._id
-                  );
-                  if (opponentScoreObj) {
-                    setOpponentScore(opponentScoreObj.score || 0);
-                  }
-                }
-              }
-            }
-            const totalLetters = Object.values(letterPool).reduce((acc, { count }) => acc + count, 0);
-            const usedLetters = movesData 
-              ? movesData.reduce((acc: number, move: any) => acc + move.placed.length, 0) 
-              : 0;
-            setRemainingLetters(totalLetters - usedLetters - 7); // 7 eldeki harfler
-          }
-        }
-        if (playerHand.length === 0) {
-          setPlayerHand(generateRandomLetters(7));
-        }
-        setGameLoaded(true);
-      } catch (error) {
-        console.error("Oyun verisi yüklenirken hata:", error);
-        Alert.alert("Hata", "Oyun verisi alınamadı. Lütfen tekrar deneyin.");
-      } finally {
-        setIsLoading(false);
+  const generateRandomLetters = (count: number): LetterTile[] => {
+    const allLetters: LetterTile[] = [];
+    Object.entries(letterPool).forEach(([letter, { count, point }]) => {
+      for (let i = 0; i < count; i++) {
+        allLetters.push({ letter, point });
       }
-    };
-
-    fetchData();
-  }, [routeGameId]);
- 
+    });
+    const hand: LetterTile[] = [];
+    for (let i = 0; i < count; i++) {
+      if (allLetters.length === 0) break;
+      const index = Math.floor(Math.random() * allLetters.length);
+      hand.push(allLetters[index]);
+      allLetters.splice(index, 1);
+    }
+    return hand;
+  };
   const getBonusType = (row: number, col: number): string => {
     if (bonusTiles.CENTER.some(tile => tile.row === row && tile.col === col)) return '★';
     if (bonusTiles.H3.some(tile => tile.row === row && tile.col === col)) return 'H3';
@@ -303,6 +227,82 @@ export default function Game() {
       Alert.alert("Geçersiz Kelime", `"${kelime}" sözlükte bulunamadı.`);
     }
   };
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const storedUserId = await AsyncStorage.getItem('userId');
+        const storedUsername = await AsyncStorage.getItem('username');       
+        if (!storedUserId) {
+          Alert.alert("Hata", "Kullanıcı ID bulunamadı. Lütfen tekrar giriş yapın.");
+          return;
+        }        
+        setUserId(storedUserId);
+        setPlayerName(storedUsername || "Oyuncu");
+        if (routeGameId) {
+          const gameData = await getGame(routeGameId as string);          
+          if (gameData) {
+            setGameId(routeGameId as string);
+            const boardState = Array(15).fill(null).map(() => Array(15).fill(''));
+            const movesData = await getMovesByGame(routeGameId as string);
+            if (movesData && movesData.length > 0) {
+              setMoves(movesData);
+              setIsFirstMove(false);
+              movesData.forEach((move: any) => {
+                move.placed.forEach((tile: any) => {
+                  boardState[tile.y][tile.x] = tile.letter;
+                });
+              });
+            }
+            setBoard(boardState);
+            setIsCurrentTurn(gameData.currentTurn === storedUserId);
+            
+            if (gameData.scores && gameData.scores.length > 0) {
+              const playerScore = gameData.scores.find(
+                (s: any) => s.player === storedUserId || s.player._id === storedUserId
+              );
+              if (playerScore) {
+                setScore(playerScore.score || 0);
+              }
+            }
+            if (gameData.players && gameData.players.length > 1) {
+              const opponent = gameData.players.find((player: any) => 
+                (player._id || player) !== storedUserId
+              );
+              if (opponent) {
+                setOpponentId(opponent._id || opponent);
+                setOpponentName(opponent.username || "Rakip");
+                if (gameData.scores && gameData.scores.length > 0) {
+                  const opponentScoreObj = gameData.scores.find(
+                    (s: any) => s.player === opponent._id || s.player._id === opponent._id
+                  );
+                  if (opponentScoreObj) {
+                    setOpponentScore(opponentScoreObj.score || 0);
+                  }
+                }
+              }
+            }
+            const totalLetters = Object.values(letterPool).reduce((acc, { count }) => acc + count, 0);
+            const usedLetters = movesData 
+              ? movesData.reduce((acc: number, move: any) => acc + move.placed.length, 0) 
+              : 0;
+            setRemainingLetters(totalLetters - usedLetters - 7); // 7 eldeki harfler
+          }
+        }
+        if (playerHand.length === 0) {
+          setPlayerHand(generateRandomLetters(7));
+        }
+        setGameLoaded(true);
+      } catch (error) {
+        console.error("Oyun verisi yüklenirken hata:", error);
+        Alert.alert("Hata", "Oyun verisi alınamadı. Lütfen tekrar deneyin.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [routeGameId]);
 
   if (!gameLoaded || isLoading) {
     return (
