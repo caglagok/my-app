@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'; 
 import { View, Text, StyleSheet, ImageBackground, FlatList, ActivityIndicator, Alert, Pressable } from 'react-native';
 import { getActiveGames } from '../services/gameServices';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActiveGame } from '../types/gameTypes';
 import { MotiView } from 'moti';
+import { useRouter } from 'expo-router';  // useRouter import
 
 const ActiveGamesPage = ({ navigation }: any) => {
+  const router = useRouter();  // Router hook kullanıyoruz
   const [activeGames, setActiveGames] = useState<ActiveGame[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -39,6 +41,9 @@ const ActiveGamesPage = ({ navigation }: any) => {
       return null;  // Handle this case appropriately
     }
 
+    // duration kontrolü
+    const gameDuration = item.duration ? item.duration.toString() : 'Bilinmiyor';
+
     return (
       <View style={styles.gameItemContainer}>
         <MotiView
@@ -50,8 +55,9 @@ const ActiveGamesPage = ({ navigation }: any) => {
           <Text style={styles.gameName}>Oyun Türü: {item.type}</Text>
           <Text style={styles.gamePlayers}>Rakip: {rakip?.username}</Text>
           <Text style={styles.gamePlayers}>Sıra: {item.currentTurn.username}</Text>
+          <Text style={styles.gamePlayers}>Süre: {gameDuration}</Text>
           <Pressable
-            onPress={() => navigation.navigate('GameDetails', { gameId: item._id })}
+            onPress={() => router.push({ pathname: '/Game', params: { gameId: item._id, duration: gameDuration } })}  // Yönlendirme
             style={({ pressed }) => [
               styles.playButton,
               { opacity: pressed ? 0.6 : 1 }
@@ -79,13 +85,13 @@ const ActiveGamesPage = ({ navigation }: any) => {
       resizeMode="cover"
     >
       <Text style={styles.title}>Aktif Oyunlar</Text>
-        <FlatList
-          data={activeGames}
-          renderItem={renderItem}
-          keyExtractor={(item) => item._id}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          ListEmptyComponent={<Text style={styles.emptyText}>Aktif oyun bulunamadı.</Text>}
-        />
+      <FlatList
+        data={activeGames}
+        renderItem={renderItem}
+        keyExtractor={(item) => item._id}
+        contentContainerStyle={{ paddingBottom: 20 }}
+        ListEmptyComponent={<Text style={styles.emptyText}>Aktif oyun bulunamadı.</Text>}
+      />
     </ImageBackground>
   );
 };

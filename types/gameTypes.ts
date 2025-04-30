@@ -18,6 +18,7 @@ export interface ActiveGame {
   endedAt: string | null;
   isActive: boolean;
   scores: Score[];
+  duration: number;
 } 
 export type LetterTile = {
   letter: string;
