@@ -1,11 +1,11 @@
 // app/completed-games.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ImageBackground } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCompletedGames } from '../services/gameServices';
 import { MotiView } from 'moti';
 
-const CompletedGamesPage = ({ navigation }: any) => {
+const CompletedGamesPage = () => {
   const [completedGames, setCompletedGames] = useState<any[]>([]);
 
   useEffect(() => {
@@ -23,7 +23,18 @@ const CompletedGamesPage = ({ navigation }: any) => {
 
     fetchCompletedGames();
   }, []);
-
+  const getResultStyle = (result: string) => {
+    switch (result) {
+      case 'kazandın':
+        return styles.kazandin;
+      case 'kaybettin':
+        return styles.kaybettin;
+      case 'berabere':
+        return styles.berabere;
+      default:
+        return {};
+    }
+  };  
   const renderItem = ({ item, index }: { item: any; index: number }) => (
     <MotiView
       from={{ opacity: 0, translateY: 20 }}
@@ -31,17 +42,20 @@ const CompletedGamesPage = ({ navigation }: any) => {
       transition={{ delay: index * 100, type: 'timing' }}
       style={styles.gameItem}
     >
-      <Text style={styles.gameName}>{item.gameName}</Text>
-      <Text style={styles.gameWinner}>Kazanan: {item.winner}</Text>
-      <Pressable
-        onPress={() => navigation.navigate('GameDetails', { gameId: item._id })}
-        style={({ pressed }) => [
-          styles.detailButton,
-          { opacity: pressed ? 0.7 : 1 }
-        ]}
-      >
-        <Text style={styles.detailButtonText}>Detaylar</Text>
-      </Pressable>
+      <Text style={styles.gameType}>Oyun Süresi: {item.gameType}</Text>
+      <View style={styles.scoresContainer}>
+        <View style={styles.scoreBox}>
+          <Text style={styles.label}>Senin Skorun</Text>
+          <Text style={styles.score}>{item.userScore}</Text>
+        </View>
+        <View style={styles.scoreBox}>
+          <Text style={styles.label}>Rakip: {item.opponentUsername}</Text>
+          <Text style={styles.score}>{item.opponentScore}</Text>
+        </View>
+      </View>
+      <Text style={[styles.resultText, getResultStyle(item.result)]}>
+        Sonuç: {item.result.toUpperCase()}
+      </Text>
     </MotiView>
   );
 
@@ -51,12 +65,12 @@ const CompletedGamesPage = ({ navigation }: any) => {
       style={styles.background}
       resizeMode="cover"
     >
-      <View style={styles.overlay}>
+      <View>
         <Text style={styles.title}>Biten Oyunlar</Text>
         <FlatList
           data={completedGames}
           renderItem={renderItem}
-          keyExtractor={(item) => item._id}
+          keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingBottom: 20 }}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
@@ -74,12 +88,6 @@ export default CompletedGamesPage;
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)', 
-    padding: 20,
-    paddingTop: 50,
   },
   title: {
     fontFamily: 'Rubik',
@@ -100,28 +108,42 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 4,
   },
-  gameName: {
+  gameType: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 10,
+  },
+  scoresContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  scoreBox: {
+    flex: 1,
+  },
+  label: {
+    fontSize: 14,
+    color: '#7f8c8d',
+  },
+  score: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#2c3e50',
   },
-  gameWinner: {
+  resultText: {
     fontSize: 16,
-    marginTop: 8,
-    color: '#7f8c8d',
-  },
-  detailButton: {
-    marginTop: 15,
-    backgroundColor: '#27ae60',
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  detailButtonText: {
-    fontFamily: 'Rubik',
-    color: '#fff',
     fontWeight: 'bold',
-    fontSize: 16,
+    marginTop: 8,
+  },
+  kazandin: {
+    color: '#27ae60',
+  },  
+  kaybettin: {
+    color: '#e74c3c',
+  },
+  berabere: {
+    color: '#f39c12',
   },
   emptyContainer: {
     marginTop: 80,
