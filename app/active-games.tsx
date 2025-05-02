@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'; 
-import { View, Text, StyleSheet, ImageBackground, FlatList, ActivityIndicator, Alert, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, FlatList, ActivityIndicator, Alert, Pressable, ScrollView } from 'react-native';
 import { getActiveGames } from '../services/gameServices';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActiveGame } from '../types/gameTypes';
@@ -90,16 +90,18 @@ const ActiveGamesPage = ({ navigation }: any) => {
       style={styles.background}
       resizeMode="cover"
     >
-      <View>
-        <Text style={styles.title}>Aktif Oyunlar</Text>
-        <FlatList
-          data={activeGames}
-          renderItem={renderItem}
-          keyExtractor={(item) => item._id}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          ListEmptyComponent={<Text style={styles.emptyText}>Aktif oyun bulunamadı.</Text>}
-        />
-      </View>
+      <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+        <View>
+          <Text style={styles.title}>Aktif Oyunlar</Text>
+          <FlatList
+            data={activeGames}
+            renderItem={renderItem}
+            keyExtractor={(item) => item._id}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            ListEmptyComponent={<Text style={styles.emptyText}>Aktif oyun bulunamadı.</Text>}
+          />
+        </View>
+      </ScrollView>
     </ImageBackground>
   );
 };
@@ -178,5 +180,9 @@ const styles = StyleSheet.create({
     marginTop: 50,
     fontSize: 18,
     color: '#7f8c8d',
+  },
+  scrollViewContainer: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
 });
