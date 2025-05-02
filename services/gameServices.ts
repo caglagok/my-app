@@ -90,3 +90,21 @@ export const surrenderGame = async (gameId: string, userId: string) => {
     throw error; // Hata fırlatmak, UI tarafında yakalayabilmek için
   }
 };
+export const endGame = async (gameId: string, winnerId: string) => {
+  try {
+    const response = await fetch(`${API_URL}/api/games/${gameId}/end`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ gameId, winnerId }),
+    });
+    if (!response.ok) {
+      throw new Error("Oyun bitirme başarısız.");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Oyun bitirme hatası:", error);
+    throw error;
+  }
+};

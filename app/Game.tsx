@@ -6,7 +6,7 @@ import { View, Text, StyleSheet, Platform, TouchableOpacity, Dimensions, ScrollV
 import { LetterTile, PlacedTile } from '../types/gameTypes';
 import { letterPool } from '../constants/letterPool';
 import { bonusTiles } from '../constants/bonusTiles';
-import { getGame, surrenderGame} from '../services/gameServices';
+import { getGame, surrenderGame, endGame} from '../services/gameServices';
 import { submitMove, getMovesByGame } from '../services/moveServices';
 import { JokerPopup } from '../components/JokerPopup';
 
@@ -195,7 +195,22 @@ export default function Game() {
         }
         setIsFirstMove(false);
         
-        setRemainingLetters(prev => prev - placedLetters.length);
+        setRemainingLetters(prev => {
+          const newRemaining = prev - placedLetters.length;
+      
+          if (newRemaining <= 0) {
+            const winner = (score + (moveData.move?.totalPoints || 0)) > opponentScore ? userId : opponentId;
+            endGame(gameId, winner);
+            Alert.alert(
+              "Oyun Bitti",
+              winner === userId
+                ? "Tebrikler, oyunu kazandınız!"
+                : "Maalesef rakibiniz kazandı."
+            );
+          }
+      
+          return newRemaining;
+        });
         setPlacedLetters([]);
         const yeniHarfler = generateRandomLetters(placedLetters.length);
         setPlayerHand(prev => [...prev, ...yeniHarfler]);
