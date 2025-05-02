@@ -1,13 +1,21 @@
-// ResultPage.tsx
-import React from 'react';
-import { View, Text } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { View, Text, StyleSheet } from 'react-native';
 
-const ResultPage = () => {
+export default function ResultPage() {
+  const { myScore, remainingLetters, opponentScore, winner } = useLocalSearchParams();
+
   return (
-    <View>
-      <Text>Result Page</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Oyun Sonucu</Text>
+      <Text>Senin Puanın: {myScore}</Text>
+      <Text>Kalan Harf Sayın: {remainingLetters}</Text>
+      <Text>Rakibin Puanı: {opponentScore}</Text>
+      <Text>Kazanan: {winner === 'senin_userId' ? "Siz Kazandınız" : "Rakibiniz Kazandı"}</Text>
     </View>
   );
-};
+}
 
-export default ResultPage; // default export
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+});

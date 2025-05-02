@@ -159,12 +159,13 @@ export default function Game() {
     }
     setSelectedLetterIndex(prevIndex => prevIndex === index ? null : index);
   };
-
+/*
   const handleMoveConfirm = async () => {
     if (!isCurrentTurn) {
       Alert.alert("Uyarı", "Şu anda sıra sizde değil.");
       return;
     }
+    
     if (placedLetters.length === 0) {
       Alert.alert("Uyarı", "Lütfen en az bir harf yerleştirin.");
       return;
@@ -254,7 +255,194 @@ export default function Game() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }*/
+    const handleMoveConfirm = async () => {
+      if (!isCurrentTurn) {
+        Alert.alert("Uyarı", "Şu anda sıra sizde değil.");
+        return;
+      }
+    
+      // Oyun süresi dolmuş mu kontrol et
+      const currentGameData = await getGame(gameId);
+    
+      // Süreyi kontrol et ve oyun bitmişse durumu güncelle
+      const now = new Date().getTime();
+      const lastMoveTime = new Date(currentGameData.updatedAt).getTime();
+      let limitMs = 0;
+    
+      // Oyun tipi bazlı zaman kontrolü
+      switch (currentGameData.type) {
+        case "2dk":
+          limitMs = 2 * 60 * 1000;
+          break;
+        case "5dk":
+          limitMs = 5 * 60 * 1000;
+          break;
+        case "12saat":
+          limitMs = 12 * 60 * 60 * 1000;
+          break;
+        case "24saat":
+          limitMs = 24 * 60 * 60 * 1000;
+          break;
+        default:
+          break;
+      }
+    
+      if (limitMs > 0 && now - lastMoveTime > limitMs) {
+        // Süre dolmuş, rakip kazandı
+        const opponent = currentGameData.players.find((p: string) => p !== userId);
+        await endGame(gameId, opponent); // Rakip kazandı olarak oyunu bitir
+        Alert.alert("Süre Doldu", "Hamle süreniz doldu. Rakibiniz oyunu kazandı.", [
+          { text: "Tamam", onPress: () => router.replace("/HomePage") },
+        ]);
+        return;
+      }
+    
+      // Eğer oyun aktif değilse (süre bitmişse)
+      if (!currentGameData.isActive) {
+        const winnerMessage =
+          currentGameData.winner === userId
+            ? "Tebrikler, oyunu kazandınız!"
+            : "Maalesef rakibiniz kazandı.";
+        Alert.alert("Oyun Bitti", winnerMessage);
+        return;
+      }
+    
+      if (placedLetters.length === 0) {
+        Alert.alert("Uyarı", "Lütfen en az bir harf yerleştirin.");
+        return;
+      }
+    
+      setIsLoading(true);
+      try {
+        const updatedGameDataBeforeMove = await getGame(gameId);
+    
+        // 🕒 Oyun tipi bazlı zaman kontrolü
+        const now = new Date().getTime();
+        const lastMoveTime = new Date(updatedGameDataBeforeMove.updatedAt).getTime();
+        let limitMs = 0;
+    
+        switch (updatedGameDataBeforeMove.type) {
+          case "2dk":
+            limitMs = 2 * 60 * 1000;
+            break;
+          case "5dk":
+            limitMs = 5 * 60 * 1000;
+            break;
+          case "12saat":
+            limitMs = 12 * 60 * 60 * 1000;
+            break;
+          case "24saat":
+            limitMs = 24 * 60 * 60 * 1000;
+            break;
+          default:
+            break;
+        }
+    
+        if (limitMs > 0 && now - lastMoveTime > limitMs) {
+          const opponent = updatedGameDataBeforeMove.players.find(
+            (p: string) => p !== userId
+          );
+          await endGame(gameId, opponent); // Rakip kazandı olarak oyunu bitir
+          Alert.alert("Süre Doldu", "Hamle süreniz doldu. Rakibiniz oyunu kazandı.", [
+            { text: "Tamam", onPress: () => router.replace("/HomePage") },
+          ]);
+          return;
+        }
+    
+        // Süre ve aktiflik kontrolünden geçildi, hamle işlemi başlatılabilir
+        const formattedPlacedTiles = placedLetters.map((tile) => ({
+          x: tile.col,
+          y: tile.row,
+          letter: tile.letter,
+          isJoker: tile.isJoker || false,
+        }));
+    
+        const moveData = await submitMove(
+          gameId,
+          userId,
+          formattedPlacedTiles,
+          board,
+          isFirstMove
+        );
+    
+        const updatedGameData = await getGame(gameId);
+        if (updatedGameData.currentTurn === userId) {
+          setIsCurrentTurn(true);
+        } else {
+          setIsCurrentTurn(false);
+        }
+    
+        if (moveData) {
+          if (moveData.move && moveData.move.totalPoints) {
+            setScore((prev) => prev + moveData.move.totalPoints);
+          }
+          setIsFirstMove(false);
+    
+          setRemainingLetters((prev) => {
+            const newRemaining = prev - placedLetters.length;
+    
+            if (newRemaining <= 0) {
+              const winner =
+                score + (moveData.move?.totalPoints || 0) > opponentScore
+                  ? userId
+                  : opponentId;
+              setGameOver(true);
+              endGame(gameId, winner);
+              Alert.alert(
+                "Oyun Bitti",
+                winner === userId
+                  ? "Tebrikler, oyunu kazandınız!"
+                  : "Maalesef rakibiniz kazandı.",
+                [
+                  {
+                    text: "Tamam",
+                    onPress: () => router.replace("/HomePage"),
+                  },
+                ]
+              );
+            }
+            return newRemaining;
+          });
+          setPlacedLetters([]);
+          const yeniHarfler = generateRandomLetters(placedLetters.length);
+          setPlayerHand((prev) => [...prev, ...yeniHarfler]);
+          setShowConfirm(false);
+          Alert.alert(
+            "Başarılı",
+            `Hamle başarıyla kaydedildi. ${moveData.move.totalPoints} puan kazandınız.`
+          );
+          const updatedMoves = await getMovesByGame(gameId);
+          setMoves(updatedMoves);
+          const updatedGameData = await getGame(gameId);
+          setIsCurrentTurn(updatedGameData.currentTurn === userId);
+        }
+        if (gameOver) return;
+      } catch (error: any) {
+        console.error("Hamle onaylanırken hata:", error);
+        const errorMessage = error.message || "Hamleniz kaydedilemedi. Lütfen tekrar deneyin.";
+        Alert.alert("Hata", errorMessage);
+        if (errorMessage.includes("Geçersiz kelime")) {
+          const returnedLetters = placedLetters.map(({ letter }) => ({
+            letter,
+            point: letterPool[letter]?.point || 0,
+          }));
+    
+          setPlayerHand((prev) => [...prev, ...returnedLetters]);
+          const newBoard = [...board];
+          placedLetters.forEach(({ row, col }) => {
+            newBoard[row][col] = "";
+          });
+          setBoard(newBoard);
+    
+          setPlacedLetters([]);
+          setShowConfirm(false);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
   const handlePass = async () => {
     if (!isCurrentTurn) {
       Alert.alert("Uyarı", "Şu anda sıra sizde değil.");
@@ -299,6 +487,16 @@ export default function Game() {
           }
         ]);
       }
+      const gameData = await getGame(gameId);
+      router.push({
+        pathname: '/ResultPage',
+        params: {
+          score: score.toString(),
+          opponentScore: opponentScore.toString(),
+          remainingLetters: playerHand.length.toString(),
+          winner: gameData.winner 
+        }
+      });
     } catch (error) {
       console.log('Teslim olurken gönderilen userId:', userId);
       console.error('Teslim olma hatası:', error);
