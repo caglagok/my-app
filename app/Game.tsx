@@ -1,7 +1,7 @@
 //Game.tsx
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { View, Text, StyleSheet, Platform, TouchableOpacity, Dimensions, ScrollView, Alert, ActivityIndicator, SafeAreaView } from 'react-native';
 import { LetterTile, PlacedTile } from '../types/gameTypes';
 import { letterPool } from '../constants/letterPool';
@@ -42,6 +42,8 @@ export default function Game() {
   const [pendingJokerPlacement, setPendingJokerPlacement] = useState<{
     row: number; col: number; index: number;
   } | null>(null);
+  const [gameOver, setGameOver] = useState(false);
+  const router = useRouter();
 
   const handleSelectJokerLetter = (letter: string) => {
     if (!pendingJokerPlacement) return;
@@ -200,15 +202,21 @@ export default function Game() {
       
           if (newRemaining <= 0) {
             const winner = (score + (moveData.move?.totalPoints || 0)) > opponentScore ? userId : opponentId;
+            setGameOver(true);
             endGame(gameId, winner);
             Alert.alert(
               "Oyun Bitti",
               winner === userId
                 ? "Tebrikler, oyunu kazandınız!"
-                : "Maalesef rakibiniz kazandı."
+                : "Maalesef rakibiniz kazandı.",
+              [
+                {
+                  text: "Tamam",
+                  onPress: () => router.replace("/HomePage")
+                }
+              ]
             );
-          }
-      
+          }         
           return newRemaining;
         });
         setPlacedLetters([]);
@@ -221,6 +229,7 @@ export default function Game() {
         const updatedGameData = await getGame(gameId);
         setIsCurrentTurn(updatedGameData.currentTurn === userId);
       }
+      if (gameOver) return;
     } 
     catch (error: any) {
       console.error("Hamle onaylanırken hata:", error);
@@ -273,16 +282,29 @@ export default function Game() {
     try {
       const response = await surrenderGame(gameId, userId);
   
+      setGameOver(true); 
+  
       if (response?.winner) {
-        Alert.alert("Oyun Bitti", `Oyunu teslim ettiniz. Kazanan: ${response.winner}`);
+        Alert.alert("Oyun Bitti", `Oyunu teslim ettiniz. Kazanan: ${response.winner}`, [
+          {
+            text: "Tamam",
+            onPress: () => router.replace("/ResultPage") 
+          }
+        ]);
       } else {
-        Alert.alert("Oyun Bitti", "Oyunu teslim ettiniz, ancak rakip yok.");
+        Alert.alert("Oyun Bitti", "Oyunu teslim ettiniz, ancak rakip yok.", [
+          {
+            text: "Tamam",
+            onPress: () => router.replace("/ResultPage")
+          }
+        ]);
       }
     } catch (error) {
+      console.log('Teslim olurken gönderilen userId:', userId);
       console.error('Teslim olma hatası:', error);
       Alert.alert("Hata", "Teslim olma işlemi başarısız oldu.");
     }
-  };
+  };  
   const kelimeGecerliMi = (kelime: string): boolean => {
     if (!Array.isArray(kelimeListesi)) {
       console.error('Kelime listesi uygun formatta değil.');

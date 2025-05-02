@@ -61,26 +61,28 @@ const CompletedGamesPage = () => {
 
   return (
     <ImageBackground
-      source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlHv5feza9-EKXxCpRmKsoxzlZcc7IUEAHCg&s' }}
+      source={{
+        uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlHv5feza9-EKXxCpRmKsoxzlZcc7IUEAHCg&s',
+      }}
       style={styles.background}
       resizeMode="cover"
     >
-      <View>
-        <Text style={styles.title}>Biten Oyunlar</Text>
-        <FlatList
-          data={completedGames}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Henüz biten oyun yok.</Text>
-            </View>
-          }
-        />
-      </View>
+      <FlatList
+        data={completedGames}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingBottom: 20 }}
+        ListHeaderComponent={
+          <Text style={styles.title}>Biten Oyunlar</Text>
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Henüz biten oyun yok.</Text>
+          </View>
+        }
+      />
     </ImageBackground>
-  );
+  );  
 };
 
 export default CompletedGamesPage;
