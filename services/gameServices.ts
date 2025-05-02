@@ -53,11 +53,10 @@ export const getActiveGames = async (userId: string) => {
     const response = await axios.get(`${API_URL}/api/games/active`, {
       params: { userId }
     });
-    
-    return response.data;  // Make sure the backend is returning the correct data format
+    return response.data; 
   } catch (error) {
     console.error('Veri alma hatası:', error);
-    return []; // Hata durumunda boş dizi döneriz
+    return []; 
   }
 };
 export const getCompletedGames = async (userId: string) => {
