@@ -18,8 +18,6 @@ export default function ResultPage() {
   } = useLocalSearchParams();
 
   const isWinner = winner === userId;
-
-  // If matchedMines and matchedRewards are strings, we need to parse them into Mine[] and Reward[]
   const parseMinesOrRewards = (data: string | string[]): Mine[] | Reward[] => {
     if (Array.isArray(data)) {
       return data.map((item) => {
