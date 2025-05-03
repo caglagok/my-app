@@ -27,8 +27,6 @@ const HomePage = ({ navigation, route }: any) => {
   const [userInfo, setUserInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const username = route?.params?.username || 'Oyuncu';
-  
-  // Animasyonlar
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const buttonAnim = useRef([
@@ -45,19 +43,15 @@ const HomePage = ({ navigation, route }: any) => {
           setLoading(false);
           return;
         }
-
         const profile = await getUserProfile(userId);
         setUserInfo(profile);
         setLoading(false);
-        
-        // Sayfa yüklendiğinde animasyonları başlat
         startAnimations();
       } catch (error) {
         console.error('Profil bilgileri alınamadı', error);
         setLoading(false);
       }
     };
-
     fetchUserInfo();
   }, []);
 
@@ -92,28 +86,24 @@ const HomePage = ({ navigation, route }: any) => {
       ])
     ]).start();
   };
-
   const calculateSuccessRate = () => {
     if (!userInfo) return 0;
-    const { gamesWon, gamesPlayed } = userInfo;
-    if (gamesPlayed === 0) return 0;
-    return (gamesWon / gamesPlayed) * 100;
+    const { games_won, games_played } = userInfo;
+    if (games_played === 0) return 0;
+    return (games_won / games_played) * 100;
   };
-
   const getLevel = () => {
     if (!userInfo) return 1;
-    const { gamesWon = 0 } = userInfo;
-    return Math.floor(gamesWon / 5) + 1; // Her 5 kazanılan oyun için seviye artışı
+    const { games_won = 0 } = userInfo;
+    return Math.floor(games_won / 5) + 1; 
   };
-
   const getExperience = () => {
     if (!userInfo) return 0;
-    const { gamesWon = 0 } = userInfo;
+    const { games_won = 0 } = userInfo;
     const level = getLevel();
     const totalExpForLevel = (level - 1) * 5;
-    return ((gamesWon - totalExpForLevel) / 5) * 100; // Sonraki seviyeye kadar yüzdelik
-  };
-
+    return ((games_won - totalExpForLevel) / 5) * 100;
+  };  
   const handleButtonPress = (route: '/new-game' | '/active-games' | '/completed-games') => {
     Animated.sequence([
       Animated.timing(scaleAnim, {
@@ -130,7 +120,6 @@ const HomePage = ({ navigation, route }: any) => {
       router.push(route);
     });
   };  
-
   if (loading) {
     return (
       <ImageBackground 
@@ -144,7 +133,6 @@ const HomePage = ({ navigation, route }: any) => {
       </ImageBackground>
     );
   }
-
   return (
     <ImageBackground 
       source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlHv5feza9-EKXxCpRmKsoxzlZcc7IUEAHCg&s' }}
