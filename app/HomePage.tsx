@@ -164,13 +164,13 @@ const HomePage = ({ navigation, route }: any) => {
                 <View style={styles.statsRow}>
                   <Ionicons name="trophy" size={16} color="#FFD700" />
                   <Text style={styles.statText}>
-                    Kazanılan: {userInfo?.gamesWon || 0}
+                    Kazanılan: {userInfo?.games_won || 0}
                   </Text>
                 </View>
                 <View style={styles.statsRow}>
                   <Ionicons name="game-controller" size={16} color="#4CAF50" />
                   <Text style={styles.statText}>
-                    Oynanan: {userInfo?.gamesPlayed || 0}
+                    Oynanan: {userInfo?.games_played || 0}
                   </Text>
                 </View>
               </View>
@@ -189,21 +189,21 @@ const HomePage = ({ navigation, route }: any) => {
             <View style={styles.badgesContainer}>
               <Text style={styles.badgesTitle}>Başarılarım</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.badgesScroll}>
-                <View style={[styles.badge, userInfo?.gamesWon >= 1 ? styles.badgeActive : styles.badgeInactive]}>
-                  <Ionicons name="star" size={24} color={userInfo?.gamesWon >= 1 ? "#FFD700" : "#888"} />
+                <View style={[styles.badge, userInfo?.games_won >= 1 ? styles.badgeActive : styles.badgeInactive]}>
+                  <Ionicons name="star" size={24} color={userInfo?.games_won >= 1 ? "#FFD700" : "#888"} />
                   <Text style={styles.badgeText}>İlk Zafer</Text>
                 </View>
-                <View style={[styles.badge, userInfo?.gamesWon >= 5 ? styles.badgeActive : styles.badgeInactive]}>
-                  <Ionicons name="flame" size={24} color={userInfo?.gamesWon >= 5 ? "#FF6B6B" : "#888"} />
+                <View style={[styles.badge, userInfo?.games_won >= 5 ? styles.badgeActive : styles.badgeInactive]}>
+                  <Ionicons name="flame" size={24} color={userInfo?.games_won >= 5 ? "#FF6B6B" : "#888"} />
                   <Text style={styles.badgeText}>5 Galibiyet</Text>
                 </View>
-                <View style={[styles.badge, userInfo?.gamesPlayed >= 10 ? styles.badgeActive : styles.badgeInactive]}>
-                  <Ionicons name="game-controller" size={24} color={userInfo?.gamesPlayed >= 10 ? "#4CAF50" : "#888"} />
+                <View style={[styles.badge, userInfo?.games_played >= 10 ? styles.badgeActive : styles.badgeInactive]}>
+                  <Ionicons name="game-controller" size={24} color={userInfo?.games_played >= 10 ? "#4CAF50" : "#888"} />
                   <Text style={styles.badgeText}>10 Oyun</Text>
                 </View>
                 <View style={[styles.badge, calculateSuccessRate() >= 60 ? styles.badgeActive : styles.badgeInactive]}>
                   <Ionicons name="trophy" size={24} color={calculateSuccessRate() >= 60 ? "#C9A63B" : "#888"} />
-                  <Text style={styles.badgeText}>%60 Başarı</Text>
+                  <Text style={styles.badgeText}>En Az %60 Başarı</Text>
                 </View>
               </ScrollView>
             </View>
@@ -269,11 +269,11 @@ const HomePage = ({ navigation, route }: any) => {
             <Text style={styles.statsTitle}>Oyun İstatistikleri</Text>
             <View style={styles.statsGrid}>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{userInfo?.gamesWon || 0}</Text>
+                <Text style={styles.statValue}>{userInfo?.games_won || 0}</Text>
                 <Text style={styles.statLabel}>Kazanılan</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{(userInfo?.gamesPlayed || 0) - (userInfo?.gamesWon || 0)}</Text>
+                <Text style={styles.statValue}>{(userInfo?.games_played || 0) - (userInfo?.games_won || 0)}</Text>
                 <Text style={styles.statLabel}>Kaybedilen</Text>
               </View>
               <View style={styles.statItem}>
