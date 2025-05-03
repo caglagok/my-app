@@ -575,7 +575,7 @@ export default function Game() {
               isCurrentTurn && styles.currentTurnPlayer 
             ]}
           >
-            <Text style={styles.playerName}>{playerName}</Text>
+            <Text style={styles.playerName}>Siz</Text>
             <View style={styles.scoreBox}>
               <Text style={styles.score}>{score}</Text>
             </View>
