@@ -1,8 +1,6 @@
 //services/authServices.ts
-
 import { API_URL } from '../config';
 
-// Giriş Yapma fonksiyonu
 export const login = async (email: string, password: string) => {
   try {
     const response = await fetch(`${API_URL}/api/users/login`, {
@@ -12,7 +10,7 @@ export const login = async (email: string, password: string) => {
       },
       body: JSON.stringify({
         email,
-        password, // BURADA düzeltildi: 'password' olarak gönderiyoruz
+        password, 
       }),
     });
 
@@ -27,8 +25,6 @@ export const login = async (email: string, password: string) => {
     throw error;
   }
 };
-
-// Kayıt Olma fonksiyonu
 export const register = async (username: string, email: string, password: string) => {
   try {
     console.log('Register gönderilen:', { username, email, password });
@@ -47,7 +43,7 @@ export const register = async (username: string, email: string, password: string
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Register backend error:', errorData); // <-- Hatalı yanıtı da göster
+      console.error('Register backend error:', errorData); 
       throw new Error(errorData.message || 'Kayıt başarısız.');
     }
 
