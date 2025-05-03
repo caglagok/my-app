@@ -90,20 +90,18 @@ const ActiveGamesPage = ({ navigation }: any) => {
       style={styles.background}
       resizeMode="cover"
     >
-      <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-        <View>
+      <FlatList
+        data={activeGames}
+        renderItem={renderItem}
+        keyExtractor={(item) => item._id}
+        contentContainerStyle={{ paddingBottom: 20 }}
+        ListEmptyComponent={<Text style={styles.emptyText}>Aktif oyun bulunamadı.</Text>}
+        ListHeaderComponent={
           <Text style={styles.title}>Aktif Oyunlar</Text>
-          <FlatList
-            data={activeGames}
-            renderItem={renderItem}
-            keyExtractor={(item) => item._id}
-            contentContainerStyle={{ paddingBottom: 20 }}
-            ListEmptyComponent={<Text style={styles.emptyText}>Aktif oyun bulunamadı.</Text>}
-          />
-        </View>
-      </ScrollView>
+        }
+      />
     </ImageBackground>
-  );
+  );  
 };
 
 export default ActiveGamesPage;
