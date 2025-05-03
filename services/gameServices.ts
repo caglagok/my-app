@@ -10,18 +10,13 @@ export const joinOrCreateGame = async (userId: string, duration: number) => {
     720: '12saat',
     1440: '24saat'
   };
-
   const type = typeMap[duration];
-
   try {
     const response = await axios.post(`${API_URL}/api/games/join-or-create`, {
       userId,
       type
     });
-
-    // Eğer oyun başlatıldıysa, oyun verilerini döndürüyoruz
     const { message, gameId, players, type: gameType, startedAt, endedAt, isActive, currentTurn , mines,rewards} = response.data;
-
     return {
       message,
       gameId,

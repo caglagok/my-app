@@ -17,18 +17,13 @@ export const submitMove = async (
       boardState,
       firstMove
     });
-
-    // Verinin başarılı şekilde gönderildiğini kontrol et
     console.log('Hamle başarıyla gönderildi:', response.data);
-
-    return response.data; // Gelen veriyi döndür
+    return response.data; 
   } catch (error: any) {
     console.error('Hamle gönderilemedi:', error.response?.data || error.message);
     throw new Error(error.response?.data?.message || 'Hamle gönderilemedi.');
   }
 };
-
-// Belirli bir oyunun hamlelerini getir
 export const getMovesByGame = async (gameId: string) => {
   try {
     const response = await axios.get(`${API_URL}/api/moves/getMovesByGame/${gameId}`);
