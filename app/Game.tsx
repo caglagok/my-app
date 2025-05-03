@@ -47,21 +47,15 @@ export default function Game() {
 
   const handleSelectJokerLetter = (letter: string) => {
     if (!pendingJokerPlacement) return;
-
     const { row, col, index } = pendingJokerPlacement;
-
-    // Joker seçilen harf yerleştiriliyor ama puanı 0 oluyor
     const updatedLetters = [...placedLetters, { row, col, letter, point: 0, isJoker: true }];
     setPlacedLetters(updatedLetters);
-
     const newBoard = [...board];
     newBoard[row][col] = letter;
     setBoard(newBoard);
-
     const newHand = [...playerHand];
     newHand.splice(index, 1);
     setPlayerHand(newHand);
-    
     setSelectedLetterIndex(null);
     setPendingJokerPlacement(null);
     setIsJokerVisible(false);
@@ -327,7 +321,7 @@ export default function Game() {
     }
     setIsLoading(true);
     try {
-      await submitMove(gameId, userId, [], board, isFirstMove); // boş hamle
+      await submitMove(gameId, userId, [], board, isFirstMove);
       const updatedGameData = await getGame(gameId);
       setIsCurrentTurn(updatedGameData.currentTurn === userId);
       setIsFirstMove(false);
