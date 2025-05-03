@@ -365,6 +365,8 @@ export default function Game() {
           winner: gameData.winner,
           userId, 
           opponentName, 
+          matchedMines: gameData.matchedMines,  
+          matchedRewards: gameData.matchedRewards,
         }
       }); 
       console.log({
