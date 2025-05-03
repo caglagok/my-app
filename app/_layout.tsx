@@ -10,7 +10,7 @@ import 'react-native-reanimated';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme(); // Light mı Dark mı?
+  const colorScheme = useColorScheme(); 
   
   const [loaded] = useFonts({
     Rubik: require('../assets/fonts/Rubik-VariableFont_wght.ttf'),
@@ -31,15 +31,15 @@ export default function RootLayout() {
       <Stack
         initialRouteName="index"
         screenOptions={{
-          headerTitleAlign: 'center', // Başlıklar ortalansın
+          headerTitleAlign: 'center', 
           headerStyle: {
             backgroundColor: colorScheme === 'dark' ? '#121212' : '#f5f5f5',
           },
           headerTitleStyle: {
-            fontFamily: 'SpaceMono', // Her başlığa özel font
+            fontFamily: 'SpaceMono',
             fontSize: 20,
           },
-          animation: 'fade', // Sayfa geçiş animasyonu
+          animation: 'fade', 
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -50,6 +50,7 @@ export default function RootLayout() {
         <Stack.Screen name="active-games" options={{ title: "Aktif Oyunlar" }} />
         <Stack.Screen name="completed-games" options={{ title: "Biten Oyunlar" }} />
         <Stack.Screen name="HomePage" options={{ title: "Profilim" }} />
+        <Stack.Screen name="ResultPage" options={{ title: "Sonuç" }} />
       </Stack>
     </ThemeProvider>
   );
