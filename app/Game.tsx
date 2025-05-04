@@ -181,9 +181,18 @@ export default function Game() {
     if (limitMs > 0 && now - lastMoveTime > limitMs) {
       const opponent = currentGameData.players.find((p: string) => p !== userId);
       await endGame(gameId, opponent); 
-      Alert.alert("Süre Doldu", "Hamle süreniz doldu. Rakibiniz oyunu kazandı.", [
-        { text: "Tamam", onPress: () => router.replace("/HomePage") },
-      ]);
+      const gameData = await getGame(gameId);
+      router.push({
+        pathname: '/ResultPage',
+        params: {
+          myScore: score.toString(),
+          opponentScore: opponentScore.toString(),
+          remainingLetters: remainingLetters.toString(),
+          winner: gameData.winner,
+          userId, 
+          opponentName,
+        }
+      });
       return;
     }
     if (!currentGameData.isActive) {
@@ -191,8 +200,27 @@ export default function Game() {
         currentGameData.winner === userId
           ? "Tebrikler, oyunu kazandınız!"
           : "Maalesef rakibiniz kazandı.";
-      Alert.alert("Oyun Bitti", winnerMessage);
-      return;
+          const gameData = await getGame(gameId);
+          Alert.alert("Oyun Bitti", winnerMessage, [
+            {
+              text: "Tamam",
+              onPress: () =>
+                router.push({
+                  pathname: "/ResultPage",
+                  params: {
+                    myScore: score.toString(),
+                    opponentScore: opponentScore.toString(),
+                    remainingLetters: remainingLetters.toString(),
+                    winner: gameData.winner,
+                    userId,
+                    opponentName,
+                    matchedMines: gameData.matchedMines,  
+                    matchedRewards: gameData.matchedRewards,
+                  },
+                }),
+            },
+          ]);
+          return;
     }
     if (placedLetters.length === 0) {
       Alert.alert("Uyarı", "Lütfen en az bir harf yerleştirin.");
@@ -225,11 +253,21 @@ export default function Game() {
           (p: string) => p !== userId
         );
         await endGame(gameId, opponent);
-        Alert.alert("Süre Doldu", "Hamle süreniz doldu. Rakibiniz oyunu kazandı.", [
-          { text: "Tamam", onPress: () => router.replace("/HomePage") },
-        ]);
+        const gameData = await getGame(gameId);
+        router.push({
+          pathname: '/ResultPage',
+          params: {
+            myScore: score.toString(),
+            opponentScore: opponentScore.toString(),
+            remainingLetters: remainingLetters.toString(),
+            winner: gameData.winner,
+            userId, 
+            opponentName,
+          }
+        });
         return;
       }
+      
       const formattedPlacedTiles = placedLetters.map((tile) => ({
         x: tile.col,
         y: tile.row,
@@ -270,7 +308,20 @@ export default function Game() {
               [
                 {
                   text: "Tamam",
-                  onPress: () => router.replace("/HomePage"),
+                  onPress: () =>
+                    router.push({
+                      pathname: "/ResultPage",
+                      params: {
+                        myScore: (score + (moveData.move?.totalPoints || 0)).toString(),
+                        opponentScore: opponentScore.toString(),
+                        remainingLetters: "0",
+                        winner,
+                        userId,
+                        opponentName,
+                        
+                        
+                      },
+                    }),
                 },
               ]
             );
@@ -314,28 +365,79 @@ export default function Game() {
       setIsLoading(false);
     }
   };
+
+  interface Move {
+    placed: any[]; // Yerleştirilen harflerin dizisi
+    totalPoints: number; // Toplam puan
+  }
+  
   const handlePass = async () => {
     if (!isCurrentTurn) {
       Alert.alert("Uyarı", "Şu anda sıra sizde değil.");
       return;
     }
+  
     setIsLoading(true);
+  
     try {
+      // Sunucuya boş hamle (pas) gönder
       await submitMove(gameId, userId, [], board, isFirstMove);
+  
+      // Hamle geçmişini sunucudan çek
+      const updatedMoves = await getMovesByGame(gameId);
+      setMoves(updatedMoves);
+  
+      // Son iki hamleyi kontrol et
+      const lastTwoMoves = updatedMoves.slice(-2);
+      const bothAreNull = lastTwoMoves.length === 2 &&
+        lastTwoMoves.every((move: Move) => !move.placed || move.placed.length === 0);  // Burada Move türünü kullandık
+  
+      if (bothAreNull) {
+        const winner = score > opponentScore ? userId : opponentId;
+        setGameOver(true);
+  
+        Alert.alert(
+          "Oyun Bitti",
+          winner === userId
+            ? "Tebrikler, oyunu kazandınız!"
+            : "Maalesef rakibiniz kazandı.",
+          [
+            {
+              text: "Tamam",
+              onPress: () => router.push({
+                pathname: '/ResultPage',
+                params: {
+                  myScore: score.toString(),
+                  opponentScore: opponentScore.toString(),
+                  remainingLetters: remainingLetters.toString(),
+                  winner,
+                  userId,
+                  opponentName,
+                  
+                }
+              }),
+            },
+          ]
+        );
+        return;
+      }
+  
+      // Devam eden durumlar için sırayı güncelle
       const updatedGameData = await getGame(gameId);
       setIsCurrentTurn(updatedGameData.currentTurn === userId);
       setIsFirstMove(false);
       setShowConfirm(false);
+  
       Alert.alert("Pas Geçildi", "Sıranız başarıyla pas geçildi.");
-      const updatedMoves = await getMovesByGame(gameId);
-      setMoves(updatedMoves);
     } catch (error: any) {
       console.error("Pas geçilirken hata:", error);
       Alert.alert("Hata", "Pas geçilemedi. Lütfen tekrar deneyin.");
     } finally {
       setIsLoading(false);
     }
-  }; 
+  };
+  
+  
   const handleSurrender = async () => {
     try {
       const response = await surrenderGame(gameId, userId);
