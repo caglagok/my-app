@@ -192,6 +192,8 @@ export default function Game() {
           winner: gameData.winner,
           userId, 
           opponentName,
+          matchedMines: gameData.matchedMines,  
+          matchedRewards: gameData.matchedRewards,
         }
       });
       return;
@@ -264,6 +266,8 @@ export default function Game() {
             winner: gameData.winner,
             userId, 
             opponentName,
+            matchedMines: gameData.matchedMines,  
+            matchedRewards: gameData.matchedRewards,
           }
         });
         return;
@@ -288,6 +292,7 @@ export default function Game() {
       } else {
         setIsCurrentTurn(false);
       }
+      const gameData = await getGame(gameId);
       if (moveData) {
         if (moveData.move && moveData.move.totalPoints) {
           setScore((prev) => prev + moveData.move.totalPoints);
@@ -319,7 +324,8 @@ export default function Game() {
                         winner,
                         userId,
                         opponentName,
-                        
+                        matchedMines: gameData.matchedMines,  
+                        matchedRewards: gameData.matchedRewards,
                         
                       },
                     }),
@@ -390,7 +396,7 @@ export default function Game() {
       if (bothAreNull) {
         const winner = score > opponentScore ? userId : opponentId;
         setGameOver(true);
-  
+        const gameData = await getGame(gameId);
         Alert.alert(
           "Oyun Bitti",
           winner === userId
@@ -408,7 +414,8 @@ export default function Game() {
                   winner,
                   userId,
                   opponentName,
-                  
+                  matchedMines: gameData.matchedMines,  
+                  matchedRewards: gameData.matchedRewards,
                 }
               }),
             },
@@ -458,8 +465,8 @@ export default function Game() {
           winner: gameData.winner,
           userId, 
           opponentName, 
-          matchedMines: gameData.matchedMines,  
-          matchedRewards: gameData.matchedRewards,
+          matchedMines: JSON.stringify(gameData.matchedMines),  
+          matchedRewards: JSON.stringify(gameData.matchedRewards),
         }
       }); 
       console.log({

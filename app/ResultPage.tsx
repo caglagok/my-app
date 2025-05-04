@@ -18,7 +18,7 @@ export default function ResultPage() {
   } = useLocalSearchParams();
 
   const isWinner = winner === userId;
-  const parseMinesOrRewards = (data: string | string[]): Mine[] | Reward[] => {
+  /*const parseMinesOrRewards = (data: string | string[]): Mine[] | Reward[] => {
     if (Array.isArray(data)) {
       return data.map((item) => {
         const match = item.match(/\[(\d+),\s*(\d+)\s*-\s*(\w+)\]/);
@@ -30,10 +30,21 @@ export default function ResultPage() {
       }).filter(Boolean) as Mine[] | Reward[];
     }
     return [];
+  };*/
+  const parseMinesOrRewards = (data: string | string[]): Mine[] | Reward[] => {
+    try {
+      if (typeof data === 'string') {
+        return JSON.parse(data);
+      }
+      return [];
+    } catch (e) {
+      console.error("Parsing error:", e);
+      return [];
+    }
   };
-
-  const mines: Mine[] = parseMinesOrRewards(matchedMines);
-  const rewards: Reward[] = parseMinesOrRewards(matchedRewards);
+  const mines: Mine[] = JSON.parse(matchedMines as string);
+  const rewards: Reward[] = JSON.parse(matchedRewards as string);
+  
 
   return (
     <ImageBackground 
