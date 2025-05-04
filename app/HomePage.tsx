@@ -34,9 +34,11 @@ const HomePage = ({ navigation, route }: any) => {
     new Animated.Value(100),
     new Animated.Value(100)
   ]).current;
+  const [initialLoad, setInitialLoad] = useState(true);
 
   useEffect(() => {
     const fetchUserInfo = async () => {
+      if (initialLoad) setLoading(true);
       try {
         const userId = await AsyncStorage.getItem('userId');
         if (!userId) {
@@ -45,14 +47,22 @@ const HomePage = ({ navigation, route }: any) => {
         }
         const profile = await getUserProfile(userId);
         setUserInfo(profile);
-        setLoading(false);
-        startAnimations();
+        if (initialLoad) startAnimations();
       } catch (error) {
         console.error('Profil bilgileri alınamadı', error);
-        setLoading(false);
+      } finally {
+        if (initialLoad) {
+          setLoading(false);
+          setInitialLoad(false);
+        }
       }
     };
     fetchUserInfo();
+    const interval = setInterval(() => {
+      fetchUserInfo();
+    }, 180000);
+    return () => clearInterval(interval);
+    
   }, []);
 
   const startAnimations = () => {
