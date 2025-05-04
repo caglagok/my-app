@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { View, Text, StyleSheet, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 type Mine = { row: number; col: number; type: string };
@@ -42,9 +42,8 @@ export default function ResultPage() {
       return [];
     }
   };
-  const mines: Mine[] = JSON.parse(matchedMines as string);
-  const rewards: Reward[] = JSON.parse(matchedRewards as string);
-  
+  const mines: Mine[] = JSON.parse(matchedMines as string || "[]");
+  const rewards: Reward[] = JSON.parse(matchedRewards as string || "[]");
 
   return (
     <ImageBackground 
@@ -55,63 +54,65 @@ export default function ResultPage() {
         colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.5)']}
         style={styles.overlay}
       >
-        <Text style={styles.title}>Oyun Sonucu</Text>
-  
-        <View style={styles.resultContainer}>
-          {/* Sol taraf - oyuncu */}
-          <View style={[styles.playerCard, isWinner ? styles.winnerCard : styles.loserCard]}>
-            <Text style={styles.playerTitle}>Sen</Text>
-            <Text style={styles.scoreText}>{myScore || '0'}</Text>
-            {isWinner && <Text style={styles.winnerBadge}>🏆 Kazanan</Text>}
-          </View>
-  
-          {/* VS işareti */}
-          <View style={styles.vsContainer}>
-            <Text style={styles.vsText}>VS</Text>
-          </View>
-  
-          {/* Sağ taraf - rakip */}
-          <View style={[styles.playerCard, !isWinner ? styles.winnerCard : styles.loserCard]}>
-            <Text style={styles.playerTitle}>{opponentName || 'Rakip'}</Text>
-            <Text style={styles.scoreText}>{opponentScore || '0'}</Text>
-            {isWinner || <Text style={styles.winnerBadge}>🏆 Kazanan</Text>}
-          </View>
-        </View>
-  
-        {/* Oyun detayları */}
-        <View style={styles.detailsContainer}>
-          <Text style={styles.detailsTitle}>Oyun Detayları</Text>
-          <Text style={styles.infoText}>Kalan Harfler: {remainingLetters || '0'}</Text>
-          <View style={styles.detailsRow}>
-            {/* Mayınlar */}
-            <View style={styles.detailsColumn}>
-              <Text style={styles.detailsHeader}>Mayınlar</Text>
-              <Text style={styles.detailsContent}>
-                {mines.length > 0
-                  ? mines.map((mine, index) => (
-                      <Text key={index}>
-                        {`[${mine.row}, ${mine.col} - ${mine.type}] `}
-                      </Text>
-                    ))
-                  : 'Yok'}
-              </Text>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <Text style={styles.title}>Oyun Sonucu</Text>
+    
+          <View style={styles.resultContainer}>
+            {/* Sol taraf - oyuncu */}
+            <View style={[styles.playerCard, isWinner ? styles.winnerCard : styles.loserCard]}>
+              <Text style={styles.playerTitle}>Sen</Text>
+              <Text style={styles.scoreText}>{myScore || '0'}</Text>
+              {isWinner && <Text style={styles.winnerBadge}>🏆 Kazanan</Text>}
             </View>
-  
-            {/* Ödüller */}
-            <View style={styles.detailsColumn}>
-              <Text style={styles.detailsHeader}>Ödüller</Text>
-              <Text style={styles.detailsContent}>
-                {rewards.length > 0
-                  ? rewards.map((reward, index) => (
-                      <Text key={index}>
-                        {`[${reward.row}, ${reward.col} - ${reward.type}] `}
-                      </Text>
-                    ))
-                  : 'Yok'}
-              </Text>
+    
+            {/* VS işareti */}
+            <View style={styles.vsContainer}>
+              <Text style={styles.vsText}>VS</Text>
+            </View>
+    
+            {/* Sağ taraf - rakip */}
+            <View style={[styles.playerCard, !isWinner ? styles.winnerCard : styles.loserCard]}>
+              <Text style={styles.playerTitle}>{opponentName || 'Rakip'}</Text>
+              <Text style={styles.scoreText}>{opponentScore || '0'}</Text>
+              {isWinner || <Text style={styles.winnerBadge}>🏆 Kazanan</Text>}
             </View>
           </View>
-        </View>
+    
+          {/* Oyun detayları */}
+          <View style={styles.detailsContainer}>
+            <Text style={styles.detailsTitle}>Oyun Detayları</Text>
+            <Text style={styles.infoText}>Kalan Harfler: {remainingLetters || '0'}</Text>
+            <View style={styles.detailsRow}>
+              {/* Mayınlar */}
+              <View style={styles.detailsColumn}>
+                <Text style={styles.detailsHeader}>Mayınlar</Text>
+                <Text style={styles.detailsContent}>
+                  {mines.length > 0
+                    ? mines.map((mine, index) => (
+                        <Text key={index}>
+                          {`[${mine.row}, ${mine.col} - ${mine.type}] `}
+                        </Text>
+                      ))
+                    : 'Yok'}
+                </Text>
+              </View>
+    
+              {/* Ödüller */}
+              <View style={styles.detailsColumn}>
+                <Text style={styles.detailsHeader}>Ödüller</Text>
+                <Text style={styles.detailsContent}>
+                  {rewards.length > 0
+                    ? rewards.map((reward, index) => (
+                        <Text key={index}>
+                          {`[${reward.row}, ${reward.col} - ${reward.type}] `}
+                        </Text>
+                      ))
+                    : 'Yok'}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
       </LinearGradient>
     </ImageBackground>
   );  
@@ -123,6 +124,9 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  scrollContent: {
+    paddingBottom: 40,
+  },  
   overlay: {
     flex: 1,
     padding: 20,
