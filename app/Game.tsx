@@ -529,6 +529,7 @@ export default function Game() {
     }
   };
   useEffect(() => {
+    let interval: NodeJS.Timeout;
     const fetchData = async () => {
       setIsLoading(true);
       try {
@@ -615,7 +616,17 @@ export default function Game() {
         setIsLoading(false);
       }
     };
+    const startAutoRefresh = () => {
+      interval = setInterval(() => {
+        fetchData();
+      }, 20000); 
+    };
     fetchData();
+    startAutoRefresh();
+
+    return () => {
+      clearInterval(interval); 
+    };
   }, [routeGameId]);
 
   if (!gameLoaded || isLoading) {
