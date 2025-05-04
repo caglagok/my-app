@@ -39,6 +39,7 @@ export default function Game() {
   const [isCurrentTurn, setIsCurrentTurn] = useState<boolean>(false);
   const [isJokerVisible, setIsJokerVisible] = useState(false);
   const [jokerLetter, setJokerLetter] = useState<string | null>(null);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [pendingJokerPlacement, setPendingJokerPlacement] = useState<{
     row: number; col: number; index: number;
   } | null>(null);
@@ -367,10 +368,9 @@ export default function Game() {
   };
 
   interface Move {
-    placed: any[]; // Yerleştirilen harflerin dizisi
-    totalPoints: number; // Toplam puan
+    placed: any[]; 
+    totalPoints: number; 
   }
-  
   const handlePass = async () => {
     if (!isCurrentTurn) {
       Alert.alert("Uyarı", "Şu anda sıra sizde değil.");
@@ -380,14 +380,9 @@ export default function Game() {
     setIsLoading(true);
   
     try {
-      // Sunucuya boş hamle (pas) gönder
       await submitMove(gameId, userId, [], board, isFirstMove);
-  
-      // Hamle geçmişini sunucudan çek
       const updatedMoves = await getMovesByGame(gameId);
       setMoves(updatedMoves);
-  
-      // Son iki hamleyi kontrol et
       const lastTwoMoves = updatedMoves.slice(-2);
       const bothAreNull = lastTwoMoves.length === 2 &&
         lastTwoMoves.every((move: Move) => !move.placed || move.placed.length === 0);  // Burada Move türünü kullandık
@@ -421,8 +416,6 @@ export default function Game() {
         );
         return;
       }
-  
-      // Devam eden durumlar için sırayı güncelle
       const updatedGameData = await getGame(gameId);
       setIsCurrentTurn(updatedGameData.currentTurn === userId);
       setIsFirstMove(false);
@@ -436,8 +429,6 @@ export default function Game() {
       setIsLoading(false);
     }
   };
-  
-  
   const handleSurrender = async () => {
     try {
       const response = await surrenderGame(gameId, userId);
@@ -530,8 +521,9 @@ export default function Game() {
   };
   useEffect(() => {
     let interval: NodeJS.Timeout;
+
     const fetchData = async () => {
-      setIsLoading(true);
+      setIsLoading(initialLoad);
       try {
         const storedUserId = await AsyncStorage.getItem('userId');
         const storedUsername = await AsyncStorage.getItem('username');
@@ -614,12 +606,13 @@ export default function Game() {
         Alert.alert("Hata", "Oyun verisi alınamadı. Lütfen tekrar deneyin.");
       } finally {
         setIsLoading(false);
+        setInitialLoad(false);
       }
     };
     const startAutoRefresh = () => {
       interval = setInterval(() => {
         fetchData();
-      }, 20000); 
+      }, 30000); 
     };
     fetchData();
     startAutoRefresh();
@@ -629,7 +622,7 @@ export default function Game() {
     };
   }, [routeGameId]);
 
-  if (!gameLoaded || isLoading) {
+  if (!gameLoaded || (initialLoad && isLoading)) {
     return (
       <View style={[styles.container, styles.centerContent]}>
         <ActivityIndicator size="large" color="#4CAF50" />
